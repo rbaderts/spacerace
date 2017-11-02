@@ -6,11 +6,11 @@ Build & Run
     
       (OSX)
       
-      `% brew install protobuf`
+      % brew install protobuf
 
 `% ./build.sh` <br>
 `% ./spacerace server` <br>
-`% localhost:8080` <br>
+`localhost:8080` <br>
 
 
 
