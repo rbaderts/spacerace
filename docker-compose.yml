@@ -1,0 +1,56 @@
+version: '3.1'
+services:
+
+    db:
+        image: postgres:alpine
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: spacerace
+            PGDATA: /var/lib/postgresql/data/pgdata
+        ports:
+            - "5432:5432"
+        volumes:
+            - '/spacerace/pgdata:/var/lib/postgresql/data'
+        networks:
+            spacerace_net:
+              aliases:
+                - spacerace-db
+
+    logspout:
+        image: gliderlabs/logspout
+        container_name: logspout
+        ports:
+            -  "127.0.0.1:8000:8000"
+        environment:
+            DEBUG: 'true'
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        networks:
+            - spacerace_net
+    
+    spacerace:
+        image: rbaderts/spacerace
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: spacerace
+            SPACERACE_DB_HOST: spacerace-db
+
+        container_name: spacerace
+        ports:
+            - "8080:8080"
+        depends_on:
+            - db
+        links:
+            - db:spacerace-db
+        networks:
+           spacerace_net:
+              aliases:
+                 - spacerace
+
+
+networks:
+    spacerace_net:
+        driver: bridge
+

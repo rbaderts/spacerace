@@ -1,0 +1,29 @@
+{
+  "name": "spacerace",
+  "version": "1.0.0",
+  "description": "",
+  "main": "game.js",
+  "scripts": {
+    "build": "./node_modules/.bin/babel src/js -d resources/js"
+  },
+  "author": "Rick Badertscher",
+  "license": "ISC",
+  "devDependencies": {
+    "animate.css": "git+https://github.com/daneden/animate.css.git",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.7.2",
+    "babel-eslint": "^6.1.0",
+    "babel-preset-es2015": "^6.6.0",
+    "bootstrap": "^3.3.6",
+    "css-loader": "^0.23.1",
+    "file-loader": "^0.8.5",
+    "font-awesome": "^4.5.0",
+    "jquery": "^2.2.2",
+    "jquery.scrollto": "^2.1.2",
+    "pixi-sound": "1.4.2",
+    "pixi.js": "4.5.6",
+    "yy-debug": "1.1.3",
+    "pixi-viewport": "0.8.1",
+    "settingspanel": "1.2.1"
+  }
+}

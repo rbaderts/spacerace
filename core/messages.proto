@@ -1,0 +1,216 @@
+syntax = "proto2"; 
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+package core;
+
+
+
+// [START declaration]
+
+option (gogoproto.goproto_getters_all) = false;
+option (gogoproto.gostring_all) = true;
+option (gogoproto.equal_all) = true;
+option (gogoproto.verbose_equal_all) = true;
+option (gogoproto.goproto_stringer_all) = false;
+option (gogoproto.stringer_all) =  true;
+option (gogoproto.populate_all) = true;
+//option (gogoproto.testgen_all) = true;
+//option (gogoproto.benchgen_all) = true;
+option (gogoproto.marshaler_all) = true;
+option (gogoproto.sizer_all) = true;
+option (gogoproto.unmarshaler_all) = true;
+option (gogoproto.goproto_enum_stringer_all) = true;
+
+
+
+// [END declaration]
+
+
+// [START messages]
+
+enum ForceType {
+    option (gogoproto.goproto_enum_prefix) = false;
+    NoForceType = 0;
+    ThrustForce = 1;
+    CollisionForce = 2;
+    Gravitation = 3;
+    InitialForce = 4;
+}
+
+
+message Property {
+    required string resource = 1 [(gogoproto.nullable) = false];
+    required string value = 2 [(gogoproto.nullable) = false];
+}
+
+message SpriteState {
+
+    required int32 id = 1 [(gogoproto.nullable) = false];
+    required uint32 typ = 2 [(gogoproto.nullable) = false];
+
+    required double x = 3 [(gogoproto.nullable) = false];
+    required double y = 4 [(gogoproto.nullable) = false];
+    required double vx = 5 [(gogoproto.nullable) = false];
+    required double vy = 6 [(gogoproto.nullable) = false];
+    required int32 height = 7 [(gogoproto.nullable) = false];
+    required int32 width = 8 [(gogoproto.nullable) = false];
+    required double rotation = 9 [(gogoproto.nullable) = false];
+    required double mass = 10 [(gogoproto.nullable) = false];
+    required int32 playerId = 11 [(gogoproto.nullable) = false];
+
+}
+
+
+message PlayerState {
+    required int32 id = 1 [(gogoproto.nullable) = false];
+    required string name = 2 [(gogoproto.nullable) = false];
+    required int32 shipId = 3 [(gogoproto.nullable) = false];
+
+    message Inventory {
+        required PlayerResourceType resourceType = 1 [(gogoproto.nullable) = false];
+        required int32 value = 2 [(gogoproto.nullable) = false];
+    }
+
+    repeated Inventory inventory = 4 [(gogoproto.nullable) = true];
+}
+
+enum SpriteType {
+    option (gogoproto.goproto_enum_prefix) = false;
+    NoSpriteType = 0;
+    Ship = 65536;
+    LargeAsteroid = 131072;
+    SmallAsteroid = 196608;
+    Bullet = 262144;
+    Blackhole = 327680;
+    Star = 393216;
+    PrizeSprite = 458752;
+    Planet = 524288;
+}
+
+enum SpriteStatus {
+    option (gogoproto.goproto_enum_prefix) = false;
+    NoSpriteStatus = 0;
+    ShieldActive = 1;
+    JetsOn = 2;
+    PhantomMode = 3;
+}
+
+enum MessageType { 
+    option (gogoproto.goproto_enum_prefix) = false;
+    NoMessageType = 0;
+    PhysicsUpdate = 1; 
+    PlayerUpdate = 2; 
+    PlaySound = 3;
+    FreezeDrawing = 4;
+    DrawMessage = 5;
+    PlayerCommand = 6;
+    PlayerInitialize = 7;
+    PlayerDead = 8;
+}
+
+
+//enum ItemType { 
+//    option (gogoproto.goproto_enum_prefix) = false;
+//    NoItemType = 0;
+//    ShieldItem = 1; 
+//    BoosterItem = 2; 
+//    HyperspaceItem = 3; 
+//    LifeEnergyItem = 3; 
+//}
+
+enum SoundType { 
+    option (gogoproto.goproto_enum_prefix) = false;
+    NoSoundType = 0;
+    ExplosionSound = 1;
+    BoingSound = 2;
+    BloopSound = 3;
+}
+
+enum PlayerResourceType { 
+    option (gogoproto.goproto_enum_prefix) = false;
+    NoPlayerResourceType = 0;
+    LifeEnergyResource = 1; 
+    ShieldResource = 2; 
+    HyperspaceResource = 3; 
+    BoosterResource = 4; 
+    CloakResource = 5; 
+    TractorResource = 6; 
+}
+
+
+message ServerMessage {
+
+    message PhysicsUpdateData {
+        required int64 time_nanos = 1 [(gogoproto.nullable) = false];
+        required int32 frame = 2 [(gogoproto.nullable) = false];
+        optional int32 actionid = 3 [(gogoproto.nullable) = false];
+        repeated SpriteState sprites = 6;
+    }
+
+    message PlayerUpdateData {
+        required PlayerState player = 1;
+    }
+
+    message InitializePlayerData {
+        required int32 playerId = 1 [(gogoproto.nullable) = false];
+        required int32 shipId = 2 [(gogoproto.nullable) = false];
+    }
+
+    message PlaySoundData {
+        required SoundType soundType = 1 [(gogoproto.nullable) = false];
+        optional double volume = 2 [(gogoproto.nullable) = false];
+    }
+    message DrawData {
+        repeated string cmds = 1 [(gogoproto.nullable) = false];
+    }
+    message PlayerDeadData {
+        required int32 playerId = 1 [(gogoproto.nullable) = false];
+    }
+
+    required MessageType typ = 1 [(gogoproto.nullable) = false];
+    optional PhysicsUpdateData update = 2;
+    optional PlayerUpdateData players = 3;
+
+    optional InitializePlayerData initialize = 4;
+    optional PlaySoundData sound = 5;
+    optional DrawData draw = 6;
+    optional PlayerDeadData dead = 7;
+
+
+}
+
+enum CommandType {
+    option (gogoproto.goproto_enum_prefix) = false;
+    NoCommandType = 0;
+    Rotate = 1;
+    Thrust = 2;
+    Fire = 3;
+    ShieldOn = 4;
+    ShieldOff = 5;
+    Booster = 6;
+    Phaser = 7;
+    Hyperspace = 8;
+    Cloak = 9;
+    SetBulletSpeed = 10;
+    SetBlackholeMass = 11;
+    TractorOn = 12;
+    TractorOff = 13;
+
+}
+
+message PlayerCommandMessage  {
+  required CommandType cmd = 1 [(gogoproto.nullable) = false];
+  optional double value = 2 [(gogoproto.nullable) = false];
+  optional int32 actionId = 5 [(gogoproto.nullable) = false];
+}
+
+message ClientMessage {
+  required MessageType typ = 1 [(gogoproto.nullable) = false];
+  required PlayerCommandMessage cmd = 2 [(gogoproto.nullable) = false];
+}
+
+message ClientMessages {
+    repeated ClientMessage messages = 1;
+}
+   
+

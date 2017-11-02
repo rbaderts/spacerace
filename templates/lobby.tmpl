@@ -1,0 +1,85 @@
+{{define "lobby"}}
+{{template "header"}}
+
+<link rel="stylesheet" href="/static/css/lobby.css"/>
+<body>
+
+    <nav class="navbar navbar-inverse navigation-clean" style="padding:12px;">
+        <div class="container">
+            <div class="navbar-header"><a class="navbar-brand navbar-link" href="#">SpaceRace</a>
+                <!--
+                <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button>
+                -->
+            </div>
+            <div class="collapse navbar-collapse" id="navcol-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="active" role="presentation"><a href="#">Dashboard </a></li>
+                    <li role="presentation"><a href="#">FAQ </a></li>
+                    <a  aria-expanded="true" href="#" id="user_email" style="padding:10px;">{{.Email}}<img src="andrew.jpg" style="width:30px;height:30px;padding:0;margin-left:5px;" /></a>
+                    <a  aria-expanded="true" href="#" onclick="Logout()" style="padding:10px;">Logout</a>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+<div class="container container-fluid" height="700">
+    <div class="row">
+
+        <div id="raceboard" class="col-md-6 raceboard" style="background: transparent;">
+
+            <div class="panel panel-default" style="background: transparent;">
+                <!-- Default panel contents -->
+                <div class="panel-heading" style="font-size:large;text-align: center;">Races</div>
+
+                <table class="table table-bordered table-condensed" id="races_table" style="background: transparent;">
+                    <thead>
+                        <tr>
+                            <td>ID</td>
+                            <td>Name</td>
+                            <td>Start Time</td>
+                            <td>Status</td>
+                            <td>Action</td>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    {{if .Races -}}
+                        {{- range .Races }}
+                        <tr>
+                            <td>{{ .Id -}}</td>
+                            <td>{{ .Name -}}</td>
+                            <td>{{ .StartTime | FormatAsDate -}}</td>
+                            <td>{{ .Status -}}</td>
+                            {{if eq .Status "RaceUnderway"}}
+                                <td> <button class="btn btn-success btn-sm" id="Join_{{.Id}}" onclick="JoinButton(event, {{.Id}})" value="Join">Join</button></td>
+                            {{end}}
+                            {{if eq .Status "RacePending"}}
+                                <td> <button class="btn btn-primary btn-sm" id="Register_{{.Id}}" onclick="RegisterButton(event, {{.Id}})" value="Register">Register</button></td>
+                            {{end}}
+                        </tr>
+                        {{- end}}
+                    {{- end}}
+                    </tbody>
+
+                 </table>
+            </div>
+        </div>
+        <div id="raceboard-controls" class="col-md-2 raceboard">
+             <form class="form-horizontal">
+                 <div class="form-group form-group-sm">
+                      <input id="practise_race" class="btn btn-warning btn-default" type="button" value="Practise Race">
+                  </div>
+             </form>
+        </div>
+     </div>
+ </div>
+
+
+</body>
+
+<script src="/static/js/lobby.js" type="text/javascript" charset="utf-8"></script>
+
+</html>
+
+{{end}}
+

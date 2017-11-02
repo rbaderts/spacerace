@@ -1,0 +1,13 @@
+FROM golang:1.9-alpine
+COPY templates/ /app/templates/
+COPY resources/ /app/resources/
+COPY resources/img /app/resources/img
+COPY migrations/ /app/migrations/
+COPY .env /app
+ADD spacerace /app
+WORKDIR /app
+ENV GPLUSKEY AIzaSyBXaARd3SojxPZYOs9FVovXqqtlOJcnmgs
+ENV GPLUSSECRET 760584233044-fs4qh5mu6gsokk0qsfi2idpdb2v1caht.apps.googleusercontent.com\
+W59CNvnfPy8Km2YcT8S77OTR
+
+CMD ["/app/spacerace", "server"]
