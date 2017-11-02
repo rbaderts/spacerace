@@ -8,9 +8,9 @@ Build & Run
       
       `% brew install protobuf`
 
-`% ./build.sh`
-`% ./spacerace server`
-`% localhost:8080`
+`% ./build.sh` <br>
+`% ./spacerace server` <br>
+`% localhost:8080` <br>
 
 
 
