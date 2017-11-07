@@ -130,6 +130,7 @@ func (this HumanPlayer) MarshalJSON() ([]byte, error) {
 	return b, err
 }
 
+/*
 func (c *HumanPlayer) ping(ws *websocket.Conn) {
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
@@ -145,11 +146,11 @@ func (c *HumanPlayer) ping(ws *websocket.Conn) {
 		}
 	}
 }
-
+*/
 func (this *HumanPlayer) sendRoutine() {
-	ticker := time.NewTicker(pingPeriod)
+	pingTicker := time.NewTicker(pingPeriod)
 	defer func() {
-		ticker.Stop()
+		pingTicker.Stop()
 		this.ws.Close()
 	}()
 	for {
@@ -164,7 +165,6 @@ func (this *HumanPlayer) sendRoutine() {
 			}
 
 			out, err := proto.Marshal(&message)
-			//fmt.Printf("%v\n", out)
 			if err != nil {
 				return
 			}
@@ -174,18 +174,16 @@ func (this *HumanPlayer) sendRoutine() {
 				fmt.Printf("ws.WriteMessage error  %v\n", err)
 				return
 			}
-		case <-ticker.C:
+		case <-pingTicker.C:
 			fmt.Printf("Ping\n")
 			this.ws.SetWriteDeadline(time.Now().Add(writeWait))
-			//this.GetMutex().Lock()
 			if err := this.ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				fmt.Printf("Ping error\n")
-				//this.GetMutex().Unlock()
 				this.game.Quit(this)
 				return
 			}
-			//this.GetMutex().Unlock()
 		}
+
 	}
 }
 

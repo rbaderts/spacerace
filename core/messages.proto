@@ -19,7 +19,9 @@ option (gogoproto.populate_all) = true;
 option (gogoproto.marshaler_all) = true;
 option (gogoproto.sizer_all) = true;
 option (gogoproto.unmarshaler_all) = true;
-option (gogoproto.goproto_enum_stringer_all) = true;
+option (gogoproto.goproto_enum_stringer_all) = false;
+
+//panic: Go enum stringer conflicts with new enumstringer plugin: please use gogoproto.goproto_enum_stringer or gogoproto.goproto_enum_string_all and set it to false
 
 
 
@@ -57,6 +59,7 @@ message SpriteState {
     required double rotation = 9 [(gogoproto.nullable) = false];
     required double mass = 10 [(gogoproto.nullable) = false];
     required int32 playerId = 11 [(gogoproto.nullable) = false];
+    required string playerName = 12 [(gogoproto.nullable) = false];
 
 }
 

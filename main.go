@@ -28,11 +28,29 @@ import (
 	"github.com/rbaderts/spacerace/core"
 
 	//"github.com/rbaderts/spacerace/migrations"
+	_ "flag"
 	"os"
 	"time"
+_	"os/signal"
 )
 
+//var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+
 func main() {
+
+///        cpufile, memfile, err := cmd.StartProfile()
+
+	/*
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func(){
+		for _ := range c {
+			cmd.StopProfile(cpufile, memfile)
+		}
+	}()
+	*/
+//	defer cmd.StopProfile(cpufile, memfile)
+
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Printf("Error loading .env file")
@@ -41,6 +59,19 @@ func main() {
 	core.ConfigureLogging()
 
 	migrateDB()
+
+	/*
+		fmt.Printf("CPUProfile = %s\n", cmd.CPUProfile)
+		if cmd.CPUProfile != "" {
+			f, err := os.Create(cmd.CPUProfile)
+			if err != nil {
+				fmt.Printf("%v\n", err)
+			}
+			pprof.StartCPUProfile(f)
+			defer pprof.StopCPUProfile()
+		}
+	*/
+
 	if err := cmd.RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

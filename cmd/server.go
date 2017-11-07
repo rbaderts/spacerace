@@ -35,12 +35,16 @@ to quickly create a Cobra application.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Launching Server")
+		cpufile, memfile, _ := StartProfile()
 		core.Server()
+		defer StopProfile(cpufile, memfile)
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(serverCmd)
+
+	//	RootCmd.PersistentFlags().StringVar(&CPUProfile, "cpuprofile", "", "cpuprofile outputfile")
 
 	// Here you will define your flags and configuration settings.
 

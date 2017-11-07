@@ -287,7 +287,8 @@ proto.core.SpriteState.toObject = function(includeInstance, msg) {
     width: jspb.Message.getField(msg, 8),
     rotation: +jspb.Message.getField(msg, 9),
     mass: +jspb.Message.getField(msg, 10),
-    playerid: jspb.Message.getField(msg, 11)
+    playerid: jspb.Message.getField(msg, 11),
+    playername: jspb.Message.getField(msg, 12)
   };
 
   if (includeInstance) {
@@ -367,6 +368,10 @@ proto.core.SpriteState.deserializeBinaryFromReader = function(msg, reader) {
     case 11:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setPlayerid(value);
+      break;
+    case 12:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setPlayername(value);
       break;
     default:
       reader.skipField();
@@ -471,6 +476,13 @@ proto.core.SpriteState.serializeBinaryToWriter = function(message, writer) {
   if (f != null) {
     writer.writeInt32(
       11,
+      f
+    );
+  }
+  f = /** @type {string} */ (jspb.Message.getField(message, 12));
+  if (f != null) {
+    writer.writeString(
+      12,
       f
     );
   }
@@ -793,6 +805,35 @@ proto.core.SpriteState.prototype.clearPlayerid = function() {
  */
 proto.core.SpriteState.prototype.hasPlayerid = function() {
   return jspb.Message.getField(this, 11) != null;
+};
+
+
+/**
+ * required string playerName = 12;
+ * @return {string}
+ */
+proto.core.SpriteState.prototype.getPlayername = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 12, ""));
+};
+
+
+/** @param {string} value */
+proto.core.SpriteState.prototype.setPlayername = function(value) {
+  jspb.Message.setField(this, 12, value);
+};
+
+
+proto.core.SpriteState.prototype.clearPlayername = function() {
+  jspb.Message.setField(this, 12, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.core.SpriteState.prototype.hasPlayername = function() {
+  return jspb.Message.getField(this, 12) != null;
 };
 
 

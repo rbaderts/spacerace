@@ -5,8 +5,9 @@ mkdir build
 #protoc-gen-gogo --gofast_out=./core core/messages.proto
 
 echo $GOPATH
+#//protoc-gen-gogo \
 protoc \
-     -I=. -I=../../..  --gogofast_out=./ core/messages.proto
+     -I=. -I=../../..  --gogoslick_out=./ core/messages.proto
 
 ##/	(protoc -I=. -I=../../../../../ -I=../../protobuf/ --gogo_out=. example.proto)
 

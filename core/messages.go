@@ -42,7 +42,7 @@ func NewPlayerUpdate(p Player) ServerMessage {
 	for itemType, inv := range p.GetInventory() {
 		fmt.Printf("NewPlayerUpdate: itemType = %s\n", itemType)
 		inventories = append(inventories, &PlayerState_Inventory{
-			itemType, int32(inv.Amount), nil})
+			itemType, int32(inv.Amount)})
 	}
 
 	playerState.Inventory = inventories
@@ -93,8 +93,10 @@ func NewPhysicsUpdate(frame int32, sprites map[*Sprite]bool) ServerMessage {
 		//spriteTypeNum := SpriteType_value[s.Type.String()]
 
 		var playerId int32
+		var playerName string
 		if s.player != nil {
 			playerId = int32(s.player.GetPlayerId())
+			playerName = s.player.GetName()
 		}
 
 		/*
@@ -122,9 +124,6 @@ func NewPhysicsUpdate(frame int32, sprites map[*Sprite]bool) ServerMessage {
 		//		for n, v := range s.Properties {
 		//			props = append(props, Property{n, v, nil})
 		//		}
-
-		s.GetMutex().Lock()
-
 		state := &SpriteState{
 			Id:  *proto.Int32(int32(s.Id)),
 			Typ: *proto.Uint32(uint32(s.typeInfo)),
@@ -134,17 +133,17 @@ func NewPhysicsUpdate(frame int32, sprites map[*Sprite]bool) ServerMessage {
 			//Vy:       *(proto.Float64(s.Velocity.Y)),
 			//Ax:       *(proto.Float64(s.Accel.X)),
 			//Ay:       *(proto.Float64(s.Accel.Y)),
-			Height:   *proto.Int32(int32(s.Height)),
-			Width:    *proto.Int32(int32(s.Width)),
-			Rotation: *(proto.Float64(s.Rotation)),
-			Mass:     *(proto.Float64(s.Mass)),
-			PlayerId: *proto.Int32(playerId),
+			Height:     *proto.Int32(int32(s.Height)),
+			Width:      *proto.Int32(int32(s.Width)),
+			Rotation:   *(proto.Float64(s.Rotation)),
+			Mass:       *(proto.Float64(s.Mass)),
+			PlayerId:   *proto.Int32(playerId),
+			PlayerName: playerName,
 			//Forces:   forces,
 			//	States:   states,
 			//			Prize:    prize,
 			//Properties: props,
 		}
-		s.GetMutex().Unlock()
 		update.Sprites = append(update.Sprites, state)
 	}
 

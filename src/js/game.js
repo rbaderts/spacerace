@@ -172,14 +172,14 @@ function setupGameArea() {
 
 
 var shipSpritePos = null
-var shipPos = null
+var dropped = null
 var viewportCenter = null
 
 function setupDebugPanels() {
 
     Debug.init();
 
-    shipPos = Debug.add('ShipPos', {text: 'Sprite: 0, 0', side: 'leftBottom'});
+    dropped = Debug.add('Dropped', {text: 'Dropped: 0', side: 'leftBottom'});
     shipSpritePos = Debug.add('ShipSpritePos', {text: 'Sprite: 0, 0', side: 'leftBottom'});
     viewportCenter = Debug.add('ViewportCenter', {text: 'Viewport: 0, 0', side: 'leftBottom'});
 
@@ -294,7 +294,7 @@ function setup() {
     startGame()
     READY = true
     requestAnimationFrame(gameLoop);
-    setupDebugPanels()
+    //setupDebugPanels()
 }
 
 
@@ -317,11 +317,12 @@ function Now() {
 var T = 0
 var LastFrame = 0
 var Frame = 0
-
+var StartTime = Now()
+var droppedUpdates = 1
 
 function gameLoop (timestamp) {
 
-    var fps = 40
+    var fps = 60
 
         if (Frame % 60 == 0) {
             updateGauges()
@@ -376,9 +377,12 @@ function updateDebugs() {
     }
     DebugCount = 0
 
-    if (OurShip != null) {
-        var pos = "Ship: (" + OurShip.x.toFixed(2).toString() + ", " + OurShip.y.toFixed(2).toString() + ")";
-        Debug.one(pos, {panel: shipPos, color: 'red'});
+    if (StartTime > 0 && droppedUpdates > 0) {
+        var elapsedMillis = Now() - StartTime
+        var rs = math.divide(droppedUpdates, math.divide(elapsedMillis, 1000))
+
+        var msg = "Avg Updates Dropped per second: " + rs.toFixed(2).toString()
+        Debug.one(msg, {panel: dropped, color: 'red'});
     }
     if (OurShip != null) {
         var pos = "Sprite: (" + OurShip.sprite.x.toFixed(2).toString() + ", " + OurShip.sprite.y.toFixed(2).toString() + ")";
@@ -447,6 +451,7 @@ function update(delta) {
 
     if (msgs >  1) {
          console.log("dropping " + (msgs-1) + " extra server updates")
+         droppedUpdates = droppedUpdates + (msgs-1)
     }
 
     if (frameOffset === -1) {
@@ -459,7 +464,6 @@ function update(delta) {
     }
     
     PhysicsUpdateQueue = new Array()
-
 
     var playerUpdates = PlayerUpdateQueue.length
     for (i = 0; i < playerUpdates; i++) {
@@ -568,6 +572,7 @@ function updateSprites(updateMessage, delta) {
         console.log("Deleting sprite id: " + s)
         var sprite = TheGame.all[s]
         theWorldMap.removeGameObject(sprite)
+        stage.removeChild(sprite.sprite)
         delete TheGame.all[s]
     }
 
@@ -961,7 +966,7 @@ function Game() {
             var s = new GameObject(sprite, {typ: sprite.getTyp(), id: sprite.getId(), img: img,
                                    height: sprite.getHeight(), width: sprite.getWidth(), xPos: sprite.getX(), 
                                    yPos: sprite.getY(), vx: sprite.getVx(), vy: sprite.getVy(), mass: sprite.getMass(), maxAge: 1000, 
-                                   state: proto.core.SpriteStatus.NOSTATE})
+                                   state: proto.core.SpriteStatus.NOSTATE, playerName: sprite.getPlayername()})
 
             if ((typ === proto.core.SpriteType.SHIP) && (sprite.getPlayerid() === PlayerId)) {
 
@@ -998,8 +1003,6 @@ function Game() {
 
            } else if (s === OurShip) {
 
-//////////////////                var deltaX = round(ps.position.x - sprite.getX())
-//                var deltaY = round(ps.position.y - sprite.getY())
                 var deltaX = round(s.x - sprite.getX())
                 var deltaY = round(s.y - sprite.getY())
                 console.log("ship sprite: " + sprite.getId() + ", delta: (" + deltaX + "," + deltaY + ")")
@@ -1007,8 +1010,6 @@ function Game() {
                 var dis = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
                 dis = round(dis)
                 if (dis > 2) {
-//                    ps.position.set(sprite.getX(), sprite.getY())
-//                    ps.position.set(sprite.getX(), sprite.getY())
                     s.x = sprite.getX()
                     s.y = sprite.getY()
                     console.log("yanking sprite " + sprite.getId() + " into position")
@@ -1055,8 +1056,14 @@ function Game() {
 
                 if (shield) {
                     //img = "/static/img/SWS.gif"
-                    img = "SWS.gif"
-                } else if (jets) {
+                    //img = "SWS.gif"
+                    s.setShieldOn()
+                } else {
+                    s.setShieldOff()
+                    shieldSound.pause()
+                }
+
+                if (jets) {
                     //img = "/static/img/SSJ.gif"
                     img = "SSJ.gif"
                 } else {
@@ -1193,7 +1200,39 @@ function GameObject(sp, args) {
     this.kind = args.typ & SPRITE_KIND
     this.typ = args.typ
 
+    this.sbield = null
+    this.shieldOn = false
+
+
     theWorldMap.addGameObject(this)
+
+    stage.addChild(this.sprite)
+    if ('xPos' in args) {
+        this.x = args.xPos
+        this.sprite.x = args.xPos
+    }
+    if ('yPos' in args) {
+        this.y = args.yPos
+        this.sprite.y = args.yPos
+    }
+
+    if (this.kind == proto.core.SpriteType.SHIP) {
+    }
+        /*
+        if (args.playerName) {
+
+            var labelStyle = new PIXI.TextStyle({fontFamily : '"Trebuchet MS', fontStyle: "normal", fontSize: 90,
+                                                stroke : "#FFFFFF", fill: "#FFFFFF", stokeThickness : 2, align : 'center', textBaseline: 'bottom' });
+            let label = new PIXI.Text(args.playerName, labelStyle)
+
+            let halfPI = math.divide(math.PI, 2)
+
+            label.rotation = label.rotation + halfPI
+            label.y = label.y - 16
+            label.x = label.x + 26
+
+            this.sprite.addChild(label)
+        } */
 
     if (this.kind == proto.core.SpriteType.PRIZE) {
 
@@ -1216,7 +1255,7 @@ function GameObject(sp, args) {
             label = "B"
         }
 
-        var labelStyle = new PIXI.TextStyle({fontFamily : '"Trebuchet MS', fontStyle: "italic", fontSize: 22, stroke : 0xedffff, stokeThickness : 2, align : 'center'});
+        var labelStyle = new PIXI.TextStyle({fontFamily : '"Trebuchet MS', fontStyle: "italic", fontSize: 22, stroke : "#FFCCFF", stokeThickness : 2, align : 'center'});
 
 
         let prizeText = new PIXI.Text(label + "\n" + this.prizeValue,  labelStyle);
@@ -1226,6 +1265,8 @@ function GameObject(sp, args) {
         this.sprite.addChild(prizeText)
 
     }
+
+
 
     this.phantomCount = 0
     this.alphaOffset = 0
@@ -1237,15 +1278,33 @@ function GameObject(sp, args) {
         this.sprite.vy = args.vy
     }
 
-    if ('xPos' in args) {
-        this.x = args.xPos
-        this.sprite.x = args.xPos
+
+    this.setShieldOn = function() {
+        if (this.shieldOn == true) {
+            return
+        }
+        this.shieldOn = true
+        if (this.shield == null) {
+            this.shield = new PIXI.Sprite(ID["shield.gif"]);
+            this.shield.x -= this.shield.texture.width/2
+            this.shield.y -= this.shield.texture.height/2
+        }
+        this.sprite.addChild(this.shield)
+        this.height = this.shield.texture.height
+        this.width = this.shield.texture.width
     }
-    if ('yPos' in args) {
-        this.y = args.yPos
-        this.sprite.y = args.yPos
+
+    this.setShieldOff = function() {
+        if (this.shieldOn == false) {
+            return
+        }
+        this.sprite.removeChild(this.shield)
+        this.shieldOn = false
+        this.height = this.sprite.texture.height
+        this.width = this.sprite.texture.width
     }
-  
+
+
     this.isCloaked = function() {
         var shipState = this.typ & SHIP_STATE
         var cloaked = shipState & CLOAK_MODE

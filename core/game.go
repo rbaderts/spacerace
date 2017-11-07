@@ -21,7 +21,7 @@ var (
 	MAX_QUEUE = 100
 )
 
-var TickRate int64 = 40 // Ticks per second
+var FPS int64 = 60 // Ticks per second
 var random = rand.New(rand.NewSource(time.Now().Unix()))
 
 type GameStateType int
@@ -54,7 +54,8 @@ type Game struct {
 	sounds             chan ServerMessage
 	sendRoutineQuit    chan bool
 	receiveRoutineQuit chan bool
-	loopRoutineQuit    chan bool
+	gameLoopRoutineQuit    chan bool
+	eventLoopRoutineQuit    chan bool
 	width              int
 	height             int
 	state              GameStateType
@@ -76,8 +77,10 @@ func (this *Game) IsRunning() bool {
 func (this *Game) Start() {
 	this.T = 0
 	if this.state != Running && len(this.Players) >= 1 {
-		go this.Loop()
+		go this.GameLoop()
+		go this.EventLoop()
 		this.state = Running
+
 	}
 }
 
@@ -131,7 +134,8 @@ func NewGame(id int) *Game {
 	game.PlayerCommands = make(chan PlayerCommandHolder, MAX_QUEUE)
 	game.sendRoutineQuit = make(chan bool)
 	game.receiveRoutineQuit = make(chan bool)
-	game.loopRoutineQuit = make(chan bool)
+	game.gameLoopRoutineQuit = make(chan bool)
+	game.eventLoopRoutineQuit = make(chan bool)
 	game.mutex = new(sync.Mutex)
 
 	game.updates = make(chan ServerMessage, 10)
@@ -485,16 +489,13 @@ func (this *Game) updatePlayer(p Player) {
 
 const NANOS_PER_FRAME = 16666666
 
-func (this *Game) Loop() {
+func (this *Game) GameLoop() {
 
-	ticker := time.NewTicker(time.Duration(int64(time.Second) / TickRate))
+	ticker := time.NewTicker(time.Duration(int64(time.Second) / FPS))
 	defer ticker.Stop()
 
-	randomEvents := time.NewTicker(time.Duration(20 * (int64(time.Second) / TickRate)))
-	defer randomEvents.Stop()
 
 	counter := 0
-	quit := false
 	for {
 
 		if this.Frozen {
@@ -503,15 +504,72 @@ func (this *Game) Loop() {
 
 		select {
 
-		case cmdHolder := <-this.PlayerCommands:
-			this.HandlePlayerCommand(cmdHolder.Player, &cmdHolder.Cmd)
+		case <-ticker.C:
 
-		case <-randomEvents.C:
+			this.mutex.Lock()
+
+			if counter%100 == 0 {
+				Log.WithFields(logrus.Fields{"spriteCount": len(this.Sprites)}).Info("Game Tick")
+				counter = 0
+			}
+			counter += 1
+
+			startTime := time.Now().UnixNano()
+			if this.T == 0 {
+				this.T = startTime
+				this.lastFrame = startTime
+			}
+
+			frameTime := startTime - this.lastFrame
+			this.lastFrame = startTime
+
+			delta := float64(frameTime) / float64(time.Second)
+			this.compute(delta)
+
+			this.T += frameTime
+			this.frame += 1
+
+			pupdate := NewPhysicsUpdate(this.frame, this.Sprites)
+
+			for player := range this.Players {
+				if pupdate.Update != nil {
+					pupdate.Update.SetActionid(player.GetActionId())
+				}
+				player.Update(pupdate)
+			}
+
+			this.mutex.Unlock()
+
+		case <-this.gameLoopRoutineQuit:
+		        return
+
+		}
+	}
+
+
+}
+
+func (this *Game) EventLoop() {
+
+	randomEventTicker := time.NewTicker(time.Duration(20 * (int64(time.Second) / FPS)))
+	defer randomEventTicker.Stop()
+
+	for {
+
+		select {
+
+		case cmdHolder := <-this.PlayerCommands:
+
+		        this.mutex.Lock()
+                	this.HandlePlayerCommand(cmdHolder.Player, &cmdHolder.Cmd)
+			this.mutex.Unlock()
+
+		case <-randomEventTicker.C:
 
 			r := random.Intn(40)
+			this.mutex.Lock()
 			switch r {
 			case 1:
-				//				this.mutex.Lock()
 				astCount, astPresent := this.spriteCounts[LARGE_ASTEROID]
 				prizeCount, _ := this.spriteCounts[PRIZE]
 				if !astPresent || astCount <= prizeCount {
@@ -533,56 +591,18 @@ func (this *Game) Loop() {
 						break
 					}
 				}
-				//				this.mutex.Unlock()
 			default:
 				break
 			}
+			this.mutex.Unlock()
 
-		case <-ticker.C:
-
-			if counter%100 == 0 {
-				Log.WithFields(logrus.Fields{"spriteCount": len(this.Sprites)}).Info("Game Tick")
-				counter = 0
-			}
-			counter += 1
-
-			timestamp := time.Now().UnixNano()
-			if this.T == 0 {
-				this.T = timestamp
-				this.lastFrame = timestamp
-			}
-
-			frameTime := timestamp - this.lastFrame
-			this.lastFrame = timestamp
-
-			delta := float64(frameTime) / float64(time.Second)
-			this.compute(delta)
-
-			this.T += frameTime
-			this.frame += 1
-
-			pupdate := NewPhysicsUpdate(this.frame, this.Sprites)
-			for player := range this.Players {
-				if pupdate.Update != nil {
-					pupdate.Update.SetActionid(player.GetActionId())
-				}
-				//				pupdate.Update.OriginX = player.Ship.Position.x + (float64(this.width) / 2)
-				//				pupdate.Update.OriginY = player.Ship.Position.y + (float64(this.height) / 2)
-				player.Update(pupdate)
-			}
-
-		case <-this.loopRoutineQuit:
-			quit = true
-
-		default:
-			if quit == true {
-				return
-			}
-
+		case <-this.gameLoopRoutineQuit:
+			return
 		}
 	}
-
 }
+
+
 
 var computeCount int = 0
 
@@ -764,29 +784,7 @@ func (this *Game) handleCollision(spriteA *Sprite, spriteB *Sprite) bool {
 * This routine pulls messages off the broadcast channel and sends it to each registered player
  */
 
-func (this *Game) Communicate() {
-
-	//ticker := time.NewTicker(time.Second / 60)
-	//defer ticker.Stop()
-
-	quit := false
-	for {
-		//quit := false
-		select {
-
-		case <-this.receiveRoutineQuit:
-			quit = true
-
-		default:
-			if quit == true {
-				return
-			}
-
-		}
-
-	}
-}
-
+/*
 func (this *Game) SendRoutine() {
 
 	//ticker := time.NewTicker(time.Second / 60)
@@ -817,6 +815,7 @@ func (this *Game) SendRoutine() {
 				player.Update(message)
 			}
 
+
 		case <-this.sendRoutineQuit:
 			Log.Info("Game SendRoutine quit")
 			quit = true
@@ -828,6 +827,7 @@ func (this *Game) SendRoutine() {
 
 	}
 }
+*/
 
 func (this *Game) HandlePlayerCommand(player Player, cmd *PlayerCommandMessage) {
 

@@ -13,24 +13,6 @@ type Lobby struct {
 func NewLobby() *Lobby {
 
 	lobby := new(Lobby)
-
-	/*
-		races, err := LoadRaces(DB)
-		if err != nil {
-			fmt.Printf("NewLobby error - %v\n", err)
-		}
-		lobby.Races = races
-	*/
-	//var d time.Duration
-
-	/*
-		d, _ = time.ParseDuration("5m")
-		lobby.AddRace(&Race{"Qualifier1", RacePending, time.Now().Add(d), nil})
-		d, _ = time.ParseDuration("10m")
-		lobby.AddRace(&Race{"Qualifier2", RacePending, time.Now().Add(d), nil})
-		d, _ = time.ParseDuration("15m")
-		lobby.AddRace(&Race{"Money1", RacePending, time.Now().Add(d), nil})
-	*/
 	return lobby
 
 }

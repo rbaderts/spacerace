@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	tickPeriod = 100 * time.Millisecond
+	tickPeriod = 50 * time.Millisecond
 )
 
 type AIPlayer struct {
@@ -41,7 +41,6 @@ type AIPlayer struct {
 	target      *Sprite
 }
 
-//func NewPlayer(s *Game, con *websocket.Conn) *AIPlayer {
 func NewAIPlayer(s *Game) Player {
 	PlayerCount += 1
 
@@ -77,19 +76,18 @@ func (this *AIPlayer) GetShip() *Sprite {
 	return this.Ship
 }
 
-func (this *AIPlayer) chooseTarget() *SpriteState {
+func (this *AIPlayer) chooseTarget() *Sprite {
 
 	//spriteState []*SpriteState
 	var minDistance float64 = 10000000
-	var target *SpriteState
+	var target *Sprite
 
-	this.mutex.Lock()
-	for _, s := range this.spriteState {
-		kind := s.Typ & SPRITE_KIND
+	for s, _ := range this.game.Sprites {
+		kind := s.typeInfo & SPRITE_KIND
 
 		if (kind == SHIP) && (int(s.Id) != this.Ship.Id) &&
-			(s.Typ&SHIP_STATE) != CLOAK_MODE {
-			p := &Point{s.X, s.Y}
+			(s.typeInfo & SHIP_STATE) != CLOAK_MODE {
+			p := &Point{s.Position.x, s.Position.y}
 			dis := this.Ship.Position.Distance(*p)
 			if dis < minDistance {
 				target = s
@@ -98,7 +96,6 @@ func (this *AIPlayer) chooseTarget() *SpriteState {
 		}
 
 	}
-	this.mutex.Unlock()
 	if minDistance > 1200 {
 		return nil
 	}
@@ -122,47 +119,24 @@ func (this *AIPlayer) loop() {
 	}
 }
 
-func (this *AIPlayer) attack(s *SpriteState) {
+func (this *AIPlayer) attack(s *Sprite) {
 
-	targetPosition := &Point{s.X, s.Y}
-	dir := this.Ship.Position.Direction(*targetPosition)
-
-	//fmt.Printf("direction to target ship = %v\n", dir)
-	//fmt.Printf("Ships current direction = %v\n", this.Ship.Rotation)
+	dir := this.Ship.Position.Direction(s.Position)
 
 	this.Ship.Rotation = dir
 
-	thrustCommand := PlayerCommandMessage{Thrust, 20, int32(this.actionCounter), nil}
+	thrustCommand := PlayerCommandMessage{Thrust, 20, int32(this.actionCounter)}
 	this.actionCounter += 1
 
 	this.game.PlayerCommands <- PlayerCommandHolder{thrustCommand, this}
 
-	/*	diffDir := dir - this.Ship.Rotation
-		fmt.Printf("AIPlayer currentDir: %v, targetDir: %v, diff: %v\n", this.Ship.Rotation, dir, diffDir)
-
-		if diffDir != 0 {
-			rotateCommand := PlayerCommandMessage{Rotate, diffDir, int32(this.actionCounter), nil}
-			this.actionCounter += 1
-			this.game.PlayerCommands <- PlayerCommandHolder{rotateCommand, this}
-		}
-
-		thrustCommand := PlayerCommandMessage{Thrust, 20, int32(this.actionCounter), nil}
-		this.actionCounter += 1
-
-		this.game.PlayerCommands <- PlayerCommandHolder{thrustCommand, this}
-	*/
-
 }
 
 func (this *AIPlayer) Update(msg ServerMessage) {
-	//	this.SendUpdates <- msg
 
 	switch msg.Typ {
-
 	case PhysicsUpdate:
-		this.mutex.Lock()
 		this.spriteState = msg.Update.Sprites
-		this.mutex.Unlock()
 	}
 
 }

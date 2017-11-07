@@ -48,9 +48,17 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":44,"h":44},
 	"sourceSize": {"w":44,"h":44}
 },
+"shield.gif":
+{
+	"frame": {"x":1544,"y":0,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48}
+},
 "smallroid_2.gif":
 {
-	"frame": {"x":1544,"y":0,"w":23,"h":24},
+	"frame": {"x":1592,"y":0,"w":23,"h":24},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":23,"h":24},
@@ -58,7 +66,7 @@
 },
 "SS.gif":
 {
-	"frame": {"x":1567,"y":0,"w":40,"h":26},
+	"frame": {"x":1615,"y":0,"w":40,"h":26},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":40,"h":26},
@@ -66,7 +74,7 @@
 },
 "SSJ.gif":
 {
-	"frame": {"x":1607,"y":0,"w":40,"h":26},
+	"frame": {"x":1655,"y":0,"w":40,"h":26},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":40,"h":26},
@@ -74,7 +82,7 @@
 },
 "star.gif":
 {
-	"frame": {"x":1647,"y":0,"w":51,"h":50},
+	"frame": {"x":1695,"y":0,"w":51,"h":50},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":51,"h":50},
@@ -82,7 +90,7 @@
 },
 "SWS.gif":
 {
-	"frame": {"x":1698,"y":0,"w":44,"h":44},
+	"frame": {"x":1746,"y":0,"w":44,"h":44},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":44,"h":44},
@@ -90,7 +98,7 @@
 },
 "tractor.gif":
 {
-	"frame": {"x":1742,"y":0,"w":26,"h":62},
+	"frame": {"x":1790,"y":0,"w":26,"h":62},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":26,"h":62},
@@ -101,8 +109,8 @@
 	"version": "1.0",
 	"image": "sheet.png",
 	"format": "RGBA8888",
-	"size": {"w":1768,"h":768},
+	"size": {"w":1816,"h":768},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:2372fd0c9d569e07d3710ca933a6b8da:7e19eb3b682acf02632e5ebd346c0b40:9c44ecd7e9a522007eaff2949095bc1d$"
+	"smartupdate": "$TexturePacker:SmartUpdate:8704538dfa9e3013246baf26fdc7ba1b:7665300583a21704e7809526d9227a39:9c44ecd7e9a522007eaff2949095bc1d$"
 }
 }

@@ -31,7 +31,7 @@ function WorldMap(height, width, wHeight, wWidth) {
     this.viewportWidth = width
     this.worldHeight = wHeight
     this.worldWidth = wWidth
-    this.GameObjects = {} 
+    this.GameObjects = {}
 }
 
 WorldMap.constructor = WorldMap;
