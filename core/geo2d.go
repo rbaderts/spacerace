@@ -150,22 +150,22 @@ func (this Vector) GetAngle() float64 {
 	return result
 }
 
-func (this Vector) Add(v Vector) *Vector {
-	return &Vector{this.x + v.GetX(), this.y + v.GetY()}
+func (this Vector) Add(v Vector) Vector {
+	return Vector{this.x + v.GetX(), this.y + v.GetY()}
 }
 
-func (this Vector) Sub(v Vector) *Vector {
-	return &Vector{this.x - v.GetX(), this.y - v.GetY()}
+func (this Vector) Sub(v Vector) Vector {
+	return Vector{this.x - v.GetX(), this.y - v.GetY()}
 }
 
-func (this Vector) Mul(s float64) *Vector {
-	return &Vector{this.x * s, this.y * s}
+func (this Vector) Mul(s float64) Vector {
+	return Vector{this.x * s, this.y * s}
 }
 
-func (this Vector) Inverse() *Vector {
+func (this Vector) Inverse() Vector {
 	//x := -this.x
 	//y := -this.y
-	return &Vector{0 - this.x, 0 - this.y}
+	return Vector{0 - this.x, 0 - this.y}
 }
 
 func (this Point) Rotate(angle float64, origin *Point) *Point {
@@ -188,11 +188,11 @@ func (this Point) Delta(v *Point) *Vector {
 	return &Vector{x, y}
 }
 
-func (this *Point) Sub(v *Vector) *Point {
+func (this *Point) Sub(v Vector) *Point {
 	return &Point{this.x - v.x, this.y - v.y}
 }
 
-func (this *Point) Add(v *Vector) *Point {
+func (this *Point) Add(v Vector) *Point {
 	return &Point{this.x + v.x, this.y + v.y}
 }
 

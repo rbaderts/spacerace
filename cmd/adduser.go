@@ -57,6 +57,6 @@ func adduser_runit(args []string) {
 
 	_ = core.SetupDB()
 
-	core.AddUser(core.DB, args[0], args[1])
+	core.AddUser(core.Environment.DB, args[0], args[1])
 
 }

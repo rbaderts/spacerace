@@ -1,0 +1,25 @@
+namespace messages; 
+
+enum ForceType : byte { NoForceType = 0,
+    ThrustForce, CollisionForce, Gravitation, InitialForce
+}
+
+
+enum CommandType : byte {
+
+    NoCommandType = 0,
+    Rotate, Thrust, Fire, ShieldOn, ShieldOff, Boost, Phaser, Hyperspace, CloakShip,
+    SetBulletSpeed, SetBlackholeMass, TractorOn, TractorOff
+}
+
+table PlayerCommandMessage  {
+  cmd:CommandType;
+  value:double;
+  actionId:int;
+}
+
+table ClientMessage {
+  messages:[PlayerCommandMessage];
+}
+
+root_type ClientMessage;

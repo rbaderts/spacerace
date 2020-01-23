@@ -1,0 +1,64 @@
+namespace messages; 
+
+enum ForceType : byte { NoForceType = 0,
+    ThrustForce, CollisionForce, Gravitation, InitialForce
+}
+
+enum SpriteKind : uint  {
+    NoSpriteType = 0,
+    Ship = 65536,
+    LargeAsteroid = 131072,
+    SmallAsteroid = 196608,
+    Bullet = 262144,
+    Blackhole = 327680,
+    Star = 393216,
+    Prize = 458752,
+    Planet = 524288,
+    SpaceStation = 589824,
+    EndToken = 655360,
+    AiShip   = 720896
+}
+
+enum SpriteStatus : byte {
+    NoSpriteStatus = 0,
+    ShieldActive, JetsOn, PhantomMode 
+}
+
+table SpriteState {
+    id:int;
+    typ:uint;
+    x:double;
+    y:double;
+    vx:double;
+    vy:double;
+    height:int;
+    width:int;
+    rotation:double;
+    mass:double;
+    playerId:int;
+    playerName:string;
+}
+
+table SpriteStateUpdate {
+
+    id:int;
+    typ:uint;
+    x:double;
+    y:double;
+    vx:double;
+    vy:double;
+    rotation:double;
+    healthpoints:int;
+    yank:byte;
+}
+
+table PhysicsUpdate {
+    time_nanos:long;
+    frame:int;
+    actionId:int;
+    sprites:[SpriteState];
+}
+
+
+
+root_type PhysicsUpdate;

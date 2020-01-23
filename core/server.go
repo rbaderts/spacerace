@@ -15,12 +15,18 @@
 package core
 
 import (
-	"encoding/json"
+	"github.com/go-chi/chi"
+	"github.com/gocraft/dbr/v2"
+	"strings"
+
 	"fmt"
+	"github.com/go-chi/render"
+	"github.com/gobuffalo/packr"
+	"log"
 	"os"
 
-	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
+	//	"github.com/gorilla/mux"
+	//	"github.com/gorilla/sessions"
 	"github.com/gorilla/websocket"
 	_ "github.com/spf13/cobra"
 
@@ -30,7 +36,16 @@ import (
 	"net/http"
 	"strconv"
 
+	// "github.com/codegangsta/negroni"
+	"github.com/rbaderts/spacerace/auth"
+	// "github.com/rbaderts/spacerace/routes/callback"
+	// "github.com/rbaderts/spacerace/routes/login"
+	// "github.com/rbaderts/spacerace/routes/logout"
+	/// "github.com/rbaderts/spacerace/routes/user"
+	_ "log"
+	_ "os/user"
 	"time"
+	// "github.com/rbaderts/spacerace/routes/home"
 )
 
 var (
@@ -38,11 +53,20 @@ var (
 	lobbyTemplate    *template.Template
 	loginTemplate    *template.Template
 	registerTemplate *template.Template
-	upgrader         = websocket.Upgrader{}
-	Games            map[int]*Game
-	Players          map[int]Player
-	lobby            *Lobby
+	upgrader         = websocket.Upgrader{WriteBufferSize: 1024, ReadBufferSize: 1024}
+
+	Games     map[int64]*Game
+	Players   map[int]Player
+	lobby     *Lobby
+	Users     map[string]*User
+	SkipLogin bool
 )
+
+type Env struct {
+	DB   *dbr.Session
+	Port string
+	Host string
+}
 
 var Log = logrus.New()
 var PerfLog = logrus.New()
@@ -50,6 +74,11 @@ var PerfLog = logrus.New()
 const (
 	TIME_FORMAT = "02/06/2002 3:04PM"
 )
+
+func init() {
+	Users = make(map[string]*User)
+
+}
 
 func FormatAsDate(t time.Time) string {
 	return t.Format(TIME_FORMAT)
@@ -61,7 +90,14 @@ func FormatAsInt(i int) string {
 }
 */
 
-var Store sessions.Store
+//var Store sessions.Store
+
+var fmap = template.FuncMap{
+	"FormatAsDate": FormatAsDate,
+	"eq": func(a, b interface{}) bool {
+		return a == b
+	},
+}
 
 var SessionSecret string
 
@@ -74,6 +110,31 @@ type GameData struct {
 	PlayerID string
 }
 
+/*
+func StartAuth(r *mux.Router) {
+
+	r.HandleFunc("/", home.HomeHandler)
+	r.HandleFunc("/login", login.LoginHandler)
+	r.HandleFunc("/logout", logout.LogoutHandler)
+	r.HandleFunc("/callback", callback.CallbackHandler)
+
+	amw := auth.NewAuthenticationMiddleware()
+	amw.Populate()
+
+	if SkipLogin {
+	} else {
+		r.Handle("/user", negroni.New(
+			negroni.HandlerFunc(IsLoggedIn),
+			negroni.Wrap(http.HandlerFunc(user.UserHandler)),
+		)).Methods("GET")
+	}
+
+	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("public/"))))
+}
+
+*/
+
+/*
 func Server() {
 
 	SessionSecret = os.Getenv("SESSION_SECRET")
@@ -82,183 +143,198 @@ func Server() {
 	r := mux.NewRouter()
 
 	//Store the cookie store which is going to store session data in the cookie
-	Store = sessions.NewCookieStore([]byte(SessionSecret))
+	auth.Store = sessions.NewCookieStore([]byte(SessionSecret))
 
-	SetupAuth(r)
+	auth.AuthInit()
+	StartAuth(r)
+
 	_ = SetupDB()
 
 	PurgeRaces(DB)
 	lobby = NewLobby()
 
-	fmap := template.FuncMap{
-		"FormatAsDate": FormatAsDate,
-		"eq": func(a, b interface{}) bool {
-			return a == b
-		},
-	}
-
 	gameTemplate = template.New("game")
 	gameTemplate.Funcs(fmap).ParseFiles(
-		"templates/game.tmpl", "templates/header.tmpl")
+		"templates/game.tmpl", "templates/header.tmpl", "templates/footer.tmpl")
 
 	lobbyTemplate = template.New("lobby")
 	lobbyTemplate.Funcs(fmap).ParseFiles(
-		"templates/lobby.tmpl", "templates/header.tmpl")
+		"templates/lobby.tmpl", "templates/header.tmpl", "templates/footer.tmpl")
 
 	loginTemplate = template.New("login")
 	loginTemplate.Funcs(fmap).ParseFiles(
-		"templates/login.tmpl", "templates/header.tmpl")
+		"templates/login.tmpl", "templates/header.tmpl", "templates/footer.tmpl")
 
 	Games = make(map[int]*Game)
 	Players = make(map[int]Player)
 
-	//r.HandleFunc("/updates", serveWs).Queries("gameId", "", "playerId", "")
-	r.HandleFunc("/updates/{gameId}", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		gameIdStr, _ := vars["gameId"]
-		gameId, err := strconv.Atoi(gameIdStr)
-		if err != nil {
-			fmt.Printf("Can't get gameId\n")
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		serveWs(w, r, gameId)
-	}).Methods("GET", "POST")
+	fmt.Printf("Setting up handlers\n")
 
-	r.HandleFunc("/lobby", func(w http.ResponseWriter, r *http.Request) {
+	if SkipLogin {
 
-		lobby.RefreshRaces()
-		fmt.Printf("Games: = %v\n", Games)
-		for i, _ := range lobby.Races {
-			g, present := Games[lobby.Races[i].Id]
-			if present {
-				lobby.Races[i].Game = g
-			}
-		}
+		//		r.HandleFunc("/", home.HomeHandler).Methods("GET")
+		r.HandleFunc("/", LobbyHandler).Methods("GET")
+		r.HandleFunc("/lobby", LobbyHandler).Methods("GET")
+		r.HandleFunc("/newrace", NewRaceHandler).Methods("POST")
+		r.HandleFunc("/races/{id}", RaceHandler).Methods("GET")
+		r.HandleFunc("/updates/{gameId}", GameUpdateHandler).Methods("GET", "POST")
 
-		fmt.Printf("lobby: %v\n", lobby)
-		user := IsLoggedIn(r)
-		if user == nil {
-			http.Redirect(w, r, "/login", 302)
-		} else {
-			lobby.Email = user.Email
-			err := lobbyTemplate.Execute(w, lobby)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
+		/*
+			r.Handle("/lobby", LobbyHandler).Methods("GET")
+			r.Handle("/newrace", NewRaceHandler).Methods("POST")
+			r.Handle("/races/{id}", RaceHandler).Methods("GET")
+			r.Handle("/updates/{gameId}", GameUpdateHandler).Methods("GET", "POST")
+*/
 
-	}).Methods("GET")
+/*
+	} else {
+		r.Handle("/updates/{gameId}", negroni.New(
+			negroni.HandlerFunc(IsLoggedIn),
+			negroni.Wrap(http.HandlerFunc(GameUpdateHandler)),
+		)).Methods("GET", "POST")
 
-	r.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		LoginFunc(w, r)
-	}).Methods("GET", "POST")
+		r.HandleFunc("/", home.HomeHandler).Methods("GET")
 
-	r.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		r.Handle("/lobby", negroni.New(
+			negroni.HandlerFunc(IsLoggedIn),
+			negroni.Wrap(http.HandlerFunc(LobbyHandler)),
+		)).Methods("GET")
 
-		fmt.Printf("r.Method = %v\n", r.Method)
-		if r.Method == "GET" {
-			registerTemplate = template.New("register")
-			registerTemplate.Funcs(fmap).ParseFiles(
-				"templates/register.tmpl", "templates/header.tmpl")
+		r.Handle("/register", negroni.New(
+			negroni.HandlerFunc(IsLoggedIn),
+			negroni.Wrap(http.HandlerFunc(RegisterHandler)),
+		)).Methods("GET", "POST")
 
-			err := registerTemplate.Execute(w, nil)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		} else {
-			r.ParseForm()
-			// logic part of log in
-			email := r.Form["email"][0]
-			password := r.Form["password"][0]
-			AddUser(DB, email, password)
-			http.Redirect(w, r, "/login", 302)
+		r.Handle("/newrace", negroni.New(
+			negroni.HandlerFunc(IsLoggedIn),
+			negroni.Wrap(http.HandlerFunc(NewRaceHandler)),
+		)).Methods("POST")
 
-		}
-	}).Methods("GET", "POST")
+		r.Handle("/races/{id}", negroni.New(
+			negroni.HandlerFunc(IsLoggedIn),
+			negroni.Wrap(http.HandlerFunc(RaceHandler)),
+		)).Methods("GET")
+	}
 
-	r.HandleFunc("/newrace", func(w http.ResponseWriter, r *http.Request) {
+//	r.PathPrefix("/resources/").Handler(http.StripPrefix("/resources/", http.FileServer(http.Dir("resources"))))
 
-		user := IsLoggedIn(r)
-		if user == nil {
-			http.Redirect(w, r, "/login", 302)
-		} else {
-			race, err := NewPractiseRace()
-			if err != nil {
-				fmt.Printf("Error = %v\n", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			game := CreateGame(race)
-			race.Game = game
-			game.Race = race
-
-			fmt.Printf("new race - %v\n", race)
-			response, _ := json.Marshal(race)
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(201)
-			w.Write(response)
-
-		}
-	}).Methods("POST")
-
-	r.HandleFunc("/races/{id}", func(w http.ResponseWriter, r *http.Request) {
-
-		user := IsLoggedIn(r)
-		if user == nil {
-			http.Redirect(w, r, "/login", 302)
-		} else {
-			vars := mux.Vars(r)
-			idstr, _ := vars["id"]
-			fmt.Printf("id = %s\n", idstr)
-			id, err := strconv.Atoi(idstr)
-			if err != nil {
-				fmt.Printf("Error = %v\n", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			game := Games[id]
-			fmt.Printf("opening game: %v\n", game)
-
-			if game.IsRunning() == false {
-				game.Start()
-			}
-
-			data := &GameData{strconv.Itoa(game.Id), ""}
-
-			err = gameTemplate.Execute(w, data)
-
-			if err != nil {
-				fmt.Printf("Error = %v\n", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
-
-	}).Methods("GET")
-
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/lobby", 302)
-	}).Methods("GET")
-
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("resources"))))
+	r.PathPrefix("/resources").Handler(http.StripPrefix("/resources", http.FileServer(http.Dir("resources"))))
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("templates"))))
-	http.ListenAndServe(":8080", r)
+
+	fmt.Printf("ListenAndServe:")
+	http.ListenAndServe(":3000", r)
+
+
+}
+*/
+
+
+var Environment *Env
+
+func Server() {
+
+	env := &Env{
+		DB:   DBSession,
+		Port: os.Getenv("PORT"),
+		Host: os.Getenv("HOST"),
+		// We might also have a custom log.Logger, our
+		// template instance, and a config struct as fields
+		// in our Env struct.
+	}
+	Environment = env
+
+	assetBox := packr.NewBox("../web")
+
+	Games = make(map[int64]*Game)
+	Players = make(map[int]Player)
+
+	lobby = NewLobby()
+	loadTemplates()
+
+	r := chi.NewRouter()
+
+	r.Use(render.SetContentType(render.ContentTypeJSON))
+	//	r.Use(jwtauth.Verifier(tokenAuth))
+
+	FileServer(r, "/static", assetBox)
+
+	/*
+		r.HandleFunc("/", LobbyHandler).Methods("GET")
+		r.HandleFunc("/lobby", LobbyHandler).Methods("GET")
+		r.HandleFunc("/newrace", NewRaceHandler).Methods("POST")
+		r.HandleFunc("/races/{id}", RaceHandler).Methods("GET")
+	*/
+
+	r.Group(func(r chi.Router) {
+		if !SkipLogin {
+			r.Use(auth.AuthenticationRequired)
+		}
+		r.Get("/lobby", Handler{env, HomeRenderHandler}.ServeHTTP)
+
+		r.Post("/races", Handler{env, NewRaceHandler}.ServeHTTP)
+		r.Route("/races/{gameID}", func(r chi.Router) {
+			r.Get("/", Handler{env, RaceHandler}.ServeHTTP)
+		})
+		r.Route("/updates/{gameID}", func(r chi.Router) {
+			r.Get("/", Handler{env, WebserviceHandler}.ServeHTTP)
+			r.Post("/", Handler{env, WebserviceHandler}.ServeHTTP)
+		})
+		/*
+					r.Route("/users", func(r chi.Router) {
+						r.Get("/", Handler{env, GetPlayerListHandler}.ServeHTTP)
+						r.Delete("/", Handler{env, DeletePlayersHandler}.ServeHTTP)
+						r.Post("/", Handler{env, PostUserHandler}.ServeHTTP)
+						r.Route("/{playerID}", func(r chi.Router) {
+							r.Post("/paid", Handler{env, PlayerPaidHandler}.ServeHTTP)
+						})
+					})
+
+			})
+		*/
+	})
+
+	r.Get("/callback", AuthCallbackHandler)
+	r.Get("/login", LoginHandler)
+	r.Get("/logout", LogoutHandler)
+	/*
+		r.Route("/api", func(r chi.Router) {
+			r.Route("/tournaments", func(r chi.Router) {
+				r.Post("/", CreateTournamentHandler)
+				r.Get("/", ListTournamentHandler)
+				r.Route("/{tournamentID}", func(r chi.Router) {
+	*/
+	fmt.Printf("launching server on 3000\n")
+
+	if err := http.ListenAndServe(":3000", r); err != nil {
+		fmt.Printf("ListenAndServe error = %v\n", err)
+
+	}
 
 }
 
-func NewPractiseRace() (*Race, error) {
-	race, err := AddRace(DB, "PractiseRace", time.Now(), "RaceUnderway")
+func WebserviceHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
+
+	gameIdStr := chi.URLParam(r, "gameID")
+	gameId, err := strconv.ParseInt(gameIdStr, 10, 0)
+
+	if err != nil {
+		return StatusError{500, err}
+	}
+
+    serveWs(w, r, gameId)
+
+	return nil
+}
+
+func NewPractiseRace(env *Env, userId int64) (*Race, error) {
+	race, err := AddRace(env.DB, userId, "PractiseRace", time.Now(), "RaceUnderway")
 	return race, err
 }
 
 func CreateGame(race *Race) *Game {
 
 	game := NewGame(race.Id)
+	fmt.Printf("new game = %v\n", game)
 	Games[race.Id] = game
 
 	return game
@@ -277,15 +353,15 @@ func getCurrentGame(r *http.Request) *Game {
 	if err != nil {
 		return nil
 	}
-	raceId, err := strconv.Atoi(cookie.Value)
-	v, has := Games[raceId]
+	raceId, err := strconv.ParseInt(cookie.Value, 10, 0)
+	v, has := Games[int64(raceId)]
 	if has {
 		return v
 	}
 	return nil
 }
 
-func serveWs(w http.ResponseWriter, r *http.Request, gameId int) {
+func serveWs(w http.ResponseWriter, r *http.Request, gameId int64) {
 
 	fmt.Printf("Server - serveWs\n")
 
@@ -306,78 +382,10 @@ func serveWs(w http.ResponseWriter, r *http.Request, gameId int) {
 
 	hp.setWebsocket(ws)
 	game.Join(player)
+	game.UpdatePlayer(player)
+
 	go hp.ProcessCommands()
 
-}
-
-func IsLoggedIn(r *http.Request) *User {
-	session, _ := Store.Get(r, "session")
-
-	loggedIn := session.Values["loggedin"]
-	if loggedIn != nil {
-		fmt.Printf("loggedIn = %v\n", loggedIn)
-		userId := session.Values["loggedin"].(int)
-		user, err := LoadUser(DB, userId)
-		if err == nil {
-			return user
-		}
-	}
-	return nil
-}
-
-func LoginFunc(w http.ResponseWriter, r *http.Request) {
-
-	session, err := Store.Get(r, "session")
-
-	if err != nil {
-		fmt.Printf("LoginFunc err = %v\n", err)
-		loginTemplate.Execute(w, nil)
-		// in case of error during
-		// fetching session info, execute login template
-	} else {
-
-		user := IsLoggedIn(r)
-		if user == nil {
-			fmt.Printf("LoginFunc: Not Logged In\n")
-			if r.Method == "POST" {
-				fmt.Printf("LoginFunc: POST\n")
-
-				pw := r.FormValue("password")
-				email := r.FormValue("email")
-
-				user, result := Auth(DB, email, pw)
-
-				fmt.Printf("User auth result = %v\n", result)
-
-				if result == nil {
-					session.Values["loggedin"] = user.Id
-					session.Values["loggedin_email"] = user.Email
-					session.Save(r, w)
-					http.Redirect(w, r, "/lobby", 302)
-					return
-				}
-			} else if r.Method == "GET" {
-				fmt.Printf("LoginFunc: GET\n")
-				err := loginTemplate.Execute(w, nil)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-			}
-		} else {
-			http.Redirect(w, r, "/lobby", 302)
-		}
-	}
-}
-
-func LogoutFunc(w http.ResponseWriter, r *http.Request) {
-	session, err := Store.Get(r, "session")
-	if err == nil {
-		//If there is no error, then remove session
-		session.Values["loggedin"] = 0
-		session.Save(r, w)
-	}
-	http.Redirect(w, r, "/login", 302)
 }
 
 func ConfigureLogging() {
@@ -401,4 +409,279 @@ func ConfigureLogging() {
 		fmt.Printf("Failed setup perf.log: %v\n", err)
 	}
 
+}
+
+/*
+
+func LobbyHandler(w http.ResponseWriter, r *http.Request) {
+
+	lobby.RefreshRaces()
+	fmt.Printf("Games: = %v\n", Games)
+	for i, _ := range lobby.Races {
+		g, present := Games[lobby.Races[i].Id]
+		if present {
+			lobby.Races[i].Game = g
+		}
+	}
+
+	profile := GetProfile(w, r)
+
+	fmt.Printf("prof=%v\n", profile)
+	lobby.Email = profile["email"].(string)
+	lobby.Img = profile["picture"].(string)
+
+	lobby.Auth0ClientId = os.Getenv("AUTH0_CLIENT_ID")
+	lobby.Auth0ClientSecret = os.Getenv("AUTH0_CLIENT_SECRET")
+	lobby.Auth0Domain = os.Getenv("AUTH0_DOMAIN")
+	lobby.Auth0CallbackURL = template.URL(os.Getenv("AUTH0_CALLBACK_URL"))
+*/
+
+//	lobby.Email = user.Email
+/*
+	fmt.Printf("lobby email: %v\n", lobby.Email)
+	err := lobbyTemplate.Execute(w, lobby)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	//		}
+
+}
+*/
+
+/*
+func GameUpdateHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	gameIdStr, _ := vars["gameId"]
+	gameId, err := strconv.Atoi(gameIdStr)
+	if err != nil {
+		fmt.Printf("Can't get gameId\n")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	serveWs(w, r, gameId)
+}
+*/
+
+/*
+func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Printf("r.Method = %v\n", r.Method)
+	if r.Method == "GET" {
+		registerTemplate = template.New("register")
+		registerTemplate.Funcs(fmap).ParseFiles(
+			"templates/register.tmpl", "templates/header.tmpl")
+
+		err := registerTemplate.Execute(w, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		r.ParseForm()
+		// logic part of log in
+		email := r.Form["email"][0]
+		password := r.Form["password"][0]
+		AddUserWithPassword(DB, email, password)
+		http.Redirect(w, r, "/login", 302)
+
+	}
+}
+*/
+
+func NewRaceHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
+
+	var userId int64 = 0
+	if (!SkipLogin) {
+		userId = r.Context().Value("uid").(int64)
+	}
+
+	race, err := NewPractiseRace(env, userId)
+	if err != nil {
+		return StatusError{500, err}
+	}
+	game := CreateGame(race)
+	race.Game = game
+	game.Race = race
+
+	fmt.Printf("new race - %v\n", race)
+
+	render.JSON(w, r, race)
+
+	return nil
+
+}
+
+func RaceHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
+
+	//_ := r.Context().Value("uid").(int)
+
+	raceIdStr := chi.URLParam(r, "gameID")
+	raceId, err := strconv.ParseInt(raceIdStr, 10, 0)
+	if err != nil {
+		return StatusError{500, err}
+	}
+
+	game := Games[raceId]
+	fmt.Printf("opening game: %v\n", game)
+
+	if game.IsRunning() == false {
+		game.Start()
+	}
+
+	data := &GameData{strconv.FormatInt(game.Id, 10), ""}
+
+	err = gameTemplate.Execute(w, data)
+
+	if err != nil {
+		return StatusError{500, err}
+	}
+
+	return nil
+}
+
+func loadTemplates() {
+
+	gameTemplate = template.Must(template.New("game").Funcs(fmap).ParseFiles(
+		"web/templates/game.tmpl",
+		"web/templates/header.tmpl",
+		"web/templates/footer.tmpl"))
+
+	lobbyTemplate = template.Must(template.New("lobby").Funcs(fmap).ParseFiles(
+		"web/templates/lobby.tmpl",
+		"web/templates/header.tmpl",
+		"web/templates/footer.tmpl")).Funcs(fmap)
+
+	loginTemplate = template.Must(template.New("login").Funcs(fmap).ParseFiles(
+		"web/templates/login.tmpl",
+		"web/templates/header.tmpl",
+		"web/templates/footer.tmpl")).Funcs(fmap)
+
+}
+
+/*
+func HomeHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
+
+	data := struct {
+		Auth0ClientId     string
+		Auth0ClientSecret string
+		Auth0Domain       string
+		Auth0CallbackURL  template.URL
+	}{
+		os.Getenv("AUTH0_CLIENT_ID"),
+		os.Getenv("AUTH0_CLIENT_SECRET"),
+		os.Getenv("AUTH0_DOMAIN"),
+		template.URL(os.Getenv("AUTH0_CALLBACK_URL")),
+	}
+
+	templates.RenderTemplate(w, "home", data)
+}
+*/
+
+func HomeRenderHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
+
+	session, err := auth.AuthStore.Get(r, "auth-session")
+	if err != nil {
+		return StatusError{500, err}
+	}
+
+	fmt.Printf("lobby1\n")
+	var name string
+	if (!SkipLogin) {
+		var ok bool
+		var val interface{}
+		if val, ok = session.Values["given_name"]; !ok {
+			return StatusError{http.StatusSeeOther, err}
+		}
+
+		name = val.(string)
+	} else {
+		name = "noone"
+	}
+
+	data := struct {
+		Email     string
+		Img      string
+		Races     []Race
+	}{
+		name,
+		"static/img/bracketlogo.gif",
+		lobby.Races,
+	}
+
+	fmt.Printf("lobby3\n")
+	if err := lobbyTemplate.Execute(w, data); err != nil {
+		return StatusError{500, err}
+	}
+	return nil
+}
+
+func FileServer(r chi.Router, path string, root http.FileSystem) {
+	if strings.ContainsAny(path, "{}*") {
+		panic("FileServer does not permit URL parameters.")
+	}
+
+	fs := http.StripPrefix(path, http.FileServer(root))
+
+	if path != "/" && path[len(path)-1] != '/' {
+		r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
+		path += "/"
+	}
+	path += "*"
+
+	r.Get(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fs.ServeHTTP(w, r)
+	}))
+
+}
+
+type Handler struct {
+	*Env
+	H func(e *Env, w http.ResponseWriter, r *http.Request) error
+}
+
+// ServeHTTP allows our Handler type to satisfy http.Handler.
+func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	err := h.H(h.Env, w, r)
+	if err != nil {
+		switch e := err.(type) {
+		case Error:
+			// We can retrieve the status here and write out a specific
+			// HTTP status code.
+			log.Printf("HTTP %d - %s", e.Status(), e)
+			http.Error(w, e.Error(), e.Status())
+		default:
+			// Any error types we don't specifically look out for default
+			// to serving a HTTP 500
+			http.Error(w, http.StatusText(http.StatusInternalServerError),
+				http.StatusInternalServerError)
+		}
+	}
+}
+
+type Username struct {
+	Name string `json:"name"`
+}
+
+func (this Username) String() string {
+	return fmt.Sprintf(`{"name": "%s"}`, this.Name)
+}
+
+type Error interface {
+	error
+	Status() int
+}
+
+// StatusError represents an error with an associated HTTP status code.
+type StatusError struct {
+	Code int
+	Err  error
+}
+
+func (se StatusError) Error() string {
+	return se.Err.Error()
+}
+
+// Returns our HTTP status code.
+func (se StatusError) Status() int {
+	return se.Code
 }

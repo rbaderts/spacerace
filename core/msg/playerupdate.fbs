@@ -1,0 +1,30 @@
+namespace messages; 
+
+
+enum PlayerResourceType : uint {
+
+    NoPlayerResourceType = 0,
+    Life = 256,
+    Shield = 512,
+    Hyperdrive = 768,
+    Booster = 1024,
+    Cloak = 1280,
+    Tractor = 1536,
+    RailGun = 1792
+}
+
+
+table Inventory {
+    resourceType:PlayerResourceType;
+    value:int;
+}
+
+
+table PlayerUpdate {
+    id:int;
+    name:string;
+    shipId:int;
+    inventory:[Inventory];
+}
+
+root_type PlayerUpdate;

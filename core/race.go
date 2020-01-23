@@ -9,7 +9,8 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-pg/pg"
+	"github.com/gocraft/dbr/v2"
+	"log"
 	"time"
 )
 
@@ -37,24 +38,27 @@ func (b RaceStatusType) String() string {
 }
 
 type Race struct {
-	Id           int       `json:"id"`
-	Name         string    `json:"name"`
-	StartTime    time.Time `json:"startTime"`
-	Status       string    `json:"status"`
-	Regitrations []RaceRegistration
+	Id           int64     `json:"id" db:"id"`
+	UserId       int64     `json:"userId" db:"user_id"`
+	Name         string    `json:"name" db:"race_name"`
+	StartTime    time.Time `json:"startTime" db:"start_time"`
+	Status       string    `json:"status" db:"status"`
+///	Registrations []RaceRegistration
 	Game         *Game
 }
 
 type RaceRegistration struct {
-	userId     int       `json:"userId"`
-	registerOn time.Time `json:"registeredOn"`
-	placed     int       `json:"placed"`
+	UserId       int64     `json:"userId" db:"user_id"`
+	RaceId       int64     `json:"raceId" db:"race_id"`
+	RegisteredOn time.Time `json:"registeredOn" db:"registered_on"`
+	Placed       int       `json:"placed" db:"placed"`
 }
 
-func (this *Race) UpdateRaceStatus(db *pg.DB, status RaceStatusType) error {
+func (this *Race) UpdateRaceStatus(db *dbr.Session, status RaceStatusType) error {
 
-	this.Status = status.String()
-	_, err := db.Model(this).Column("status").Returning("*").Update()
+	var err error
+	_, err = db.Update("races").Set("status", status.String()).
+		Where("id = ?", this.Id).Exec()
 
 	/*
 		fmt.Printf("UpdateRaceStatus\n")
@@ -69,18 +73,35 @@ func (this *Race) UpdateRaceStatus(db *pg.DB, status RaceStatusType) error {
 	return nil
 }
 
-func AddRace(db *pg.DB, name string, startTime time.Time, status string) (*Race, error) {
-	var race Race
-	_, err := db.QueryOne(&race, `
-		INSERT INTO races (name, start_time, status) VALUES (?, ?, ?)
-		RETURNING id
-	`, name, startTime, status)
+//func AddRace(db *pg.DB, name string, startTime time.Time, status string) (*Race, error) {
+func AddRace(db *dbr.Session, userId int64, name string, startTime time.Time, status string) (*Race, error) {
+
+	var id int64
+	err := db.InsertInto("races").
+		Pair("race_name", name).
+		Pair("user_id", userId).
+		Pair("start_time", startTime).
+		Pair("status", status).
+		Returning("id").Load(&id)
+
 	if err != nil {
+		log.Fatalf("Insert User failed: %v", err)
 		return nil, err
 	}
+
+	var race Race
+	err = db.Select("*").From("races").Where("id = ?", id).LoadOne(&race)
+
+	if err != nil {
+		log.Fatalf("Select User failed: %v", err)
+		return nil, err
+	}
+
 	return &race, nil
+
 }
 
+/*
 func DeleteRace(db *pg.DB, id int) error {
 	var race Race
 	_, err := db.QueryOne(&race, `
@@ -99,20 +120,57 @@ func PurgeRaces(db *pg.DB) error {
 	}
 	return nil
 }
+ */
 
-func LoadRaces(db *pg.DB) ([]Race, error) {
-	var races []Race
-	_, err := db.Query(&races, `SELECT * FROM races`)
+func LoadRaces(db *dbr.Session) ([]Race, error) {
+
+	result, err := db.Select("*").From("races").Rows()
+
+	var races = make([]Race, 0)
+
+	for {
+		if result.Next() == false {
+			if err := result.Close(); err != nil {
+				return races, err
+			} else {
+				return races, nil
+			}
+		}
+		var id int64
+		var userId int64
+		var name string
+		var status string
+		var startTime time.Time
+		if err := result.Scan(&id, &userId, &name, &startTime, &status); err != nil {
+			_ = result.Close()
+			log.Fatalf("Scan tournament data failed: %v\n", err)
+			return nil, err
+		}
+		rec := Race{id, userId, name, startTime, status, nil}
+		races = append(races, rec)
+	}
 	return races, err
+
 }
 
-func (this *Race) Register(db *pg.DB, userId int) error {
-	r := &RaceRegistration{userId, time.Now(), 0}
-	_, err := db.QueryOne(r, `
-		INSERT INTO race_registration (user_id, register_on, placed) VALUES (?user_id, ?register_on, &placed))
-		RETURNING id
-	`, r)
-	return err
+
+func (this *Race) Register(db *dbr.Session, userId int64) error {
+	var id int64
+	if this.Id == 0 {
+		err := db.InsertInto("race_registration").
+			Columns("user_id", "register_on", "placed").
+			Values(userId, time.Now(), 0).
+			Returning("id").
+			Load(&id)
+		if err != nil {
+			log.Fatalf("Insert Tournaments failed: %v", err)
+			return err
+		}
+		this.Id = id
+
+	}
+
+	return nil
 
 }
 

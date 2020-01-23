@@ -15,41 +15,50 @@
 package main
 
 import (
-	"database/sql"
-	_ "github.com/lib/pq"
-
 	"fmt"
+	"github.com/gobuffalo/packr"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
-	"github.com/mattes/migrate"
-	"github.com/mattes/migrate/database/postgres"
+	"io/ioutil"
+	"log"
+	"path/filepath"
 
-	_ "github.com/mattes/migrate/source/file"
+	//	"github.com/mattes/migrate/database/postgres"
+	//	"golang-migrate/migrate"
+
+	/*
+		_"github.com/golang-migrate/migrate/v4/database/postgres"
+	*/
+
+	//	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+
+	//_ "github.com/mattes/migrate/source/file"
 	"github.com/rbaderts/spacerace/cmd"
 	"github.com/rbaderts/spacerace/core"
 
 	//"github.com/rbaderts/spacerace/migrations"
 	_ "flag"
 	"os"
-	"time"
-_	"os/signal"
+	_ "os/signal"
 )
 
 //var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
+
 func main() {
 
-///        cpufile, memfile, err := cmd.StartProfile()
+	///        cpufile, memfile, err := cmd.StartProfile()
 
 	/*
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func(){
-		for _ := range c {
-			cmd.StopProfile(cpufile, memfile)
-		}
-	}()
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt)
+		go func(){
+			for _ := range c {
+				cmd.StopProfile(cpufile, memfile)
+			}
+		}()
 	*/
-//	defer cmd.StopProfile(cpufile, memfile)
+	//	defer cmd.StopProfile(cpufile, memfile)
 
 	err := godotenv.Load()
 	if err != nil {
@@ -58,7 +67,21 @@ func main() {
 
 	core.ConfigureLogging()
 
-	migrateDB()
+	dir := setupMigrationAssets()
+	core.MigrateDB(dir)
+
+	fmt.Printf("deleting path %v\n", dir)
+	defer os.RemoveAll(dir);
+	if err != nil {
+		fmt.Errorf("Error removing migration tmp dir: %v\n", err)
+	}
+
+	if err := cmd.RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+
 
 	/*
 		fmt.Printf("CPUProfile = %s\n", cmd.CPUProfile)
@@ -71,88 +94,34 @@ func main() {
 			defer pprof.StopCPUProfile()
 		}
 	*/
-
-	if err := cmd.RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
 }
 
-func migrateDB() {
+func setupMigrationAssets() string {
 
-	pg_user := os.Getenv("POSTGRES_USER")
-	pg_pw := os.Getenv("POSTGRES_PASSWORD")
-	pg_host := os.Getenv("SPACERACE_DB_HOST")
-	pg_db := "spacerace"
+	tmpDir, err := ioutil.TempDir("./", "migrations_tmp")
 
-	//pg_d::= os.Getenv("POSTGRES_PASSWORD")
+	//err := os.Mkdir("./migrations_tmp", 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	//	s := bindata.Resource(migrations.AssetNames(),
-	//		func(name string) ([]byte, error) {
-	//			return migrations.Asset(name)
-	//		})
+	box := packr.NewBox("./migrations")
 
-	//	d, err := bindata.WithInstance(s)
-	//	if err != nil {
-	//		fmt.Printf("Migratione err %v\n", err)
-	//	}
-
-	//	m, err := migrate.NewWithSourceInstance("go-bindata", d, "database://foobar")
-
-	fmt.Printf("pg_user = %v, pg_pw = %v, pg_host = %v\n", pg_user, pg_pw, pg_host)
-
-	db_url := fmt.Sprintf("postgres://%s:%s@%s:5432/%s?sslmode=disable", pg_user, pg_pw, pg_host, pg_db)
-
-	var db *sql.DB
-	for {
-		var err error
-		db, err = sql.Open("postgres", db_url)
+	for _, m := range box.List() {
+		fmt.Printf("box item %s\n", m)
+		bytes, err := box.Find(m)
 		if err != nil {
-			fmt.Printf("Error = %v\n", err)
-			time.Sleep(time.Second * 2)
-		} else {
-			for {
-				if err = db.Ping(); err != nil {
-					//continue
-					time.Sleep(time.Second * 2)
-				} else {
-					break
-				}
-			}
-			break
+			fmt.Printf("err = %v", err)
+			continue
+		}
+		fmt.Printf("bytes = %v", string(bytes))
+		tmpFile := filepath.Join(tmpDir, m)
+		fmt.Printf("tmpFn = %v\n", tmpFile)
+		err = ioutil.WriteFile(tmpFile, bytes, 0644)
+		if err != nil {
+			fmt.Errorf("err = %v", err)
+			continue
 		}
 	}
-
-	//	    db, err := sql.Open("postgres", "postgres://localhost:5432/database?sslmode=enable")
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	if err != nil {
-		fmt.Printf("Error 1 = %v\n", err)
-	}
-
-	//m, err := migrate.NewWithSourceInstance("go-bindata", d, db_url)
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://migrations", "postgres", driver)
-
-	if err != nil {
-		fmt.Printf("Error 2 = %v\n", err)
-	}
-
-	err = m.Up()
-	if err != nil {
-		fmt.Printf("Error 3 = %v\n", err)
-	}
-
-	//	s := bindata.Resource(migrations.AssetNames(),
-	//		func(name string) ([]byte, error) {
-	//			return migrations.Asset(name)
-	//		})
-	//	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	//	m, err := migrate.NewWithDatabaseInstance(
-	//		"go-bindata", "postgres", driver)
-	//	m.Steps(2)
-
-	//	d, err := bindata.WithInstances(s)
-	//	m, err := migrate.NewWithSourceInstance("go-bindata", c, "postgres://postgres:postgres@localhost:5432/spacerace")
-
+	return tmpDir;
 }

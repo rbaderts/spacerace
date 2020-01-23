@@ -1,0 +1,198 @@
+{{define "game"}}
+
+{{template "header"}}
+
+
+<!--<body onload="startGame()"> -->
+
+<style>
+
+    table {
+        width: 70%;
+    }
+
+    td {
+        height: 25px;
+        padding: 0px;
+        margin: 0;
+        border: 0;
+        font-size: 14px;
+    }
+
+    th {
+        height: 35px;
+        padding: 1px;
+        margin: 0;
+        border: 0;
+        font-size: 14px;
+    }
+
+</style>
+
+</head>
+
+
+<input type=hidden id="GameID" name="GameID" value='{{.GameID}}'/>
+<input type=hidden id="PlayerID" name="PlayerID" value='{{.PlayerID}}'/>
+
+<div class="container-fluid" style="padding: 0px; margin-top: 2px">
+    <div class="row" style="height:700px; padding: 4px">
+        <div id="infoarea_div" class="col-xl-2 no-gutters"
+             style="padding: 4px; border: 1px ridge grey; margin-left: 2px">
+
+            <div id="lifeenergy-1" class="nk-progress nk-count" data-progress="100" data-progress-mask="{$}%"
+                 style="padding-left: 24px; padding-right: 24px; padding-bottom: 0px; margin-bottom: 10px;">
+
+                <div class="nk-progress-title">Health</div>
+                <div class="nk-progress-line">
+                    <div id="lifeenergy-2" style="width: 100%">
+                        <div id="lifeenergy-3" class="nk-progress-percent">100%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="shields_progress-1" class="nk-progress nk-count" data-progress="10" data-progress-mask="{$}%"
+                 style="padding-left: 24px; padding-right: 24px; padding-bottom: 0px; margin-bottom: 10px;">
+
+                <div class="nk-progress-title">Shields</div>
+                <div class="nk-progress-line">
+                    <div id="shields_progress-2" style="width: 100%">
+                        <div id="shields_progress-3" class="nk-progress-percent">100%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="boost_progress-1" class="nk-progress nk-count" data-progress="10" data-progress-mask="{$}%"
+                 style="padding-left: 24px; padding-right: 24px; padding-bottom: 0px; margin-bottom: 10px;">
+
+                <div class="nk-progress-title">Boost</div>
+                <div class="nk-progress-line">
+                    <div id="boost_progress-2" style="width: 100%">
+                        <div id="boost_progress-3" class="nk-progress-percent">100%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="hyperspace_progress-1" class="nk-progress nk-count" data-progress="10" data-progress-mask="{$}%"
+                 style="padding-left: 24px; padding-right: 24px; padding-bottom: 0px; margin-bottom: 10px;">
+
+                <div class="nk-progress-title">Hyperspace</div>
+                <div class="nk-progress-line">
+                    <div id="hyperspace_progress-2" style="width: 100%">
+                        <div id="hyperspace_progress-3" class="nk-progress-percent">100%</div>
+                    </div>
+                </div>
+            </div>
+            <!--
+            <button type="button" class="btn btn-sm nk-btn" disabled="true"
+            <button type="button" class="btn btn-sm nk-btn" disabled="true"
+                    style="margin: 2px">
+                Boost <span id="boost-value" class="badge">9</span>
+            </button><br>
+            -->
+
+            <!--
+            <button type="button" class="btn btn-sm nk-btn" disabled="true"
+                style="margin: 2px;">
+                Hyperspace <span id="hyperspace-value" class="badge">9</span>
+            </button><br>
+            -->
+
+            <!--
+            <h6 class="d-flex justify-content-between align-items-center mb-3 mr-5 ml-3">
+              <span class="text-muted">Shields</span>
+              <span class="text-warning badge badge-secondary badge-pill"
+                     id="shield-value" style="font-size: 0.9rem;">3</span>
+            </h6>
+
+            <h6 class="d-flex justify-content-between align-items-center mb-3 mr-5 ml-3">
+              <span class="text-muted">Boost</span>
+              <span class="text-warning badge badge-secondary badge-pill"
+                    id="boost-value" style="font-size: 0.9rem;">3</span>
+            </h6>
+
+            <h6 class="d-flex justify-content-between align-items-center mb-3 mr-5 ml-3">
+              <span class="text-muted">Hyperspace</span>
+              <span class="text-warning badge badge-secondary badge-pill"
+                     id="hyperspace-value" style="font-size: 0.9rem;">3</span>
+            </h6>
+            -->
+
+            <br><br>
+            <a href="#"> Rotation&nbsp;&nbsp;<span id="rotation-display" class="badge">0</span></a><br>
+        </div>
+
+        <div id="gamearea_div" class="col-xl-7 no-gutters"  style="margin-left: 4px; border: 2px ridge grey;padding: 0px;margin-right: 2px;">
+        </div>
+
+        <div id="infoarea2_div" class="col-xl-3 no-gutters" style="padding-left: 2px; margin-right: -15px;">
+
+            <div class="row" style="margin: 0px;width: 25vw; height: 25vw" >
+                <div id="overview_div" class="col-12 no-gutters" style="border: 1px ridge red;padding: 2px;">
+                </div>
+            </div>
+
+            <div class="row">
+                <div id="control-button-div" class="col-12 no-gutters" style="margin: 2px">
+                   <button class="btn btn-primary" type="button" data-toggle="collapse"
+                       data-target="#controls-legend" aria-expanded="false" aria-controls="controls-legend">Show Key Controls
+                   </button>
+                </div>
+            </div>
+
+            <div class="row no-gutters" id="controls-legend" style="background: transparent">
+
+                <div id="controls" class="col-12 no-gutters" style="margin-left: 0px; margin-right:2px; border: 2px ridge grey; padding: 0px;" height="300">
+                    <table class="table table-striped table-sm">
+                        <thead class="thead-light">
+                            <tr> 
+                                <th scope="col">Key</th>
+                                <th scope="col">Function</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>left right arrow</td>
+                                <td>Turn</td>
+                            </tr>
+                            <tr>
+                                <td>up arrow</td>
+                                <td>Thrust</td>
+                            </tr>
+                            <tr>
+                                <td>spacebar</td>
+                                <td>Fire</td>
+                            </tr>
+                            <tr>
+                                <td>s</td>
+                                <td>Shield</td>
+                            </tr>
+                            <tr>
+                                <td>tab</td>
+                                <td>Booster</td>
+                            </tr>
+                            <tr>
+                                <td>w</td>
+                                <td>Hyperspace</td>
+                            </tr>
+                            <tr>
+                                <td>c</td>
+                                <td>Cloak</td>
+                            </tr>
+                        <tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{{template "footer"}}
+    <script src="/static/js/game_bundle.js" type="text/javascript" charset="utf-8"></script>
+   </body>
+</html>
+
+
+{{end}}
+

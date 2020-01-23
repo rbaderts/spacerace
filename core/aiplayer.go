@@ -11,6 +11,7 @@ import (
 	"fmt"
 	_ "github.com/golang/protobuf/proto"
 	_ "github.com/gorilla/websocket"
+	"github.com/rbaderts/spacerace/core/messages"
 
 	"math/rand"
 	_ "os"
@@ -37,8 +38,8 @@ type AIPlayer struct {
 	actionCounter int
 	Random        *rand.Rand
 
-	spriteState []*SpriteState
-	target      *Sprite
+	//spriteState []*SpriteState
+	target *Sprite
 }
 
 func NewAIPlayer(s *Game) Player {
@@ -57,11 +58,11 @@ func NewAIPlayer(s *Game) Player {
 	p.actionId = 0
 	p.actionCounter = 0
 
-	p.AddResource(BoosterResource, 2)
-	p.AddResource(ShieldResource, 10)
-	p.AddResource(HyperspaceResource, 2)
-	p.AddResource(LifeEnergyResource, 100)
-	p.AddResource(CloakResource, 5)
+	p.AddResource(messages.PlayerResourceTypeBooster, 2)
+	p.AddResource(messages.PlayerResourceTypeShield, 10)
+	p.AddResource(messages.PlayerResourceTypeHyperdrive, 2)
+	p.AddResource(messages.PlayerResourceTypeLife, 100)
+	p.AddResource(messages.PlayerResourceTypeCloak, 5)
 	p.Random = rand.New(rand.NewSource(time.Now().Unix()))
 
 	go p.loop()
@@ -78,15 +79,15 @@ func (this *AIPlayer) GetShip() *Sprite {
 
 func (this *AIPlayer) chooseTarget() *Sprite {
 
-	//spriteState []*SpriteState
 	var minDistance float64 = 10000000
 	var target *Sprite
 
-	for s, _ := range this.game.Sprites {
-		kind := s.typeInfo & SPRITE_KIND
+	sprites := this.game.CopySprites()
 
-		if (kind == SHIP) && (int(s.Id) != this.Ship.Id) &&
-			(s.typeInfo & SHIP_STATE) != CLOAK_MODE {
+	for _, s := range sprites {
+		kind := SpriteKind(s.typeInfo & SPRITE_KIND)
+		if (kind == messages.SpriteKindShip) &&
+			(s.typeInfo&SHIP_STATE) != CLOAK_MODE {
 			p := &Point{s.Position.x, s.Position.y}
 			dis := this.Ship.Position.Distance(*p)
 			if dis < minDistance {
@@ -122,23 +123,35 @@ func (this *AIPlayer) loop() {
 func (this *AIPlayer) attack(s *Sprite) {
 
 	dir := this.Ship.Position.Direction(s.Position)
-
 	this.Ship.Rotation = dir
 
-	thrustCommand := PlayerCommandMessage{Thrust, 20, int32(this.actionCounter)}
+	cmd := NewPlayerCommand(this, messages.CommandTypeThrust, 20, int32(this.actionCounter))
 	this.actionCounter += 1
 
-	this.game.PlayerCommands <- PlayerCommandHolder{thrustCommand, this}
+	fmt.Printf("AIPlayer attacking\n")
+	this.game.PlayerCommands <- PlayerCommandHolder{cmd, this}
 
 }
 
+/*
 func (this *AIPlayer) Update(msg ServerMessage) {
 
-	switch msg.Typ {
-	case PhysicsUpdate:
-		this.spriteState = msg.Update.Sprites
-	}
+	/*
+		switch msg.Typ {
+		case MessageType_PhysicsUpdate:
+			this.spriteState = msg.Update.Sprites
+		}
+	*/
 
+
+func (this *AIPlayer) UpdateWithBytes(bytes []byte) {
+
+	/*
+		switch msg.Typ {
+		case PhysicsUpdate:
+			this.spriteState = msg.Update.Sprites
+		}
+	*/
 }
 
 func (this *AIPlayer) SetActionId(id int) {

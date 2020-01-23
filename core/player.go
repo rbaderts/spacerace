@@ -11,6 +11,7 @@ import (
 	_ "fmt"
 	_ "github.com/golang/protobuf/proto"
 	_ "github.com/gorilla/websocket"
+	"github.com/rbaderts/spacerace/core/messages"
 
 	_ "math/rand"
 	_ "os"
@@ -23,7 +24,7 @@ var MessageNumber int32 = 0
 var PlayerCount int = 0
 
 type PlayerCommandHolder struct {
-	Cmd    PlayerCommandMessage
+	Cmd    *messages.PlayerCommandMessage
 	Player Player
 }
 
@@ -31,12 +32,26 @@ type PlayerType int
 
 const (
 	_ PlayerType = iota
+	NO_PLAYER_TYPE
 	HUMAN_PLAYER
 	AI_PLAYER
 )
 
+var PlayerTypes = [...]string{
+	"None",
+	"Human",
+	"Ai",
+}
+
+func (s PlayerType) Sting() string {
+	return PlayerTypes[s]
+}
+
+
+
 type Player interface {
-	Update(msg ServerMessage)
+//	Update(msg messages.Update)
+	UpdateWithBytes(bytes []byte)
 	GetPlayerId() int
 
 	GetActionId() int

@@ -1,0 +1,276 @@
+{"frames": {
+
+"BG2.gif":
+{
+	"frame": {"x":0,"y":130,"w":1366,"h":768},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":1366,"h":768},
+	"sourceSize": {"w":1366,"h":768},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"Blackhole.png":
+{
+	"frame": {"x":269,"y":0,"w":40,"h":40},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":40,"h":40},
+	"sourceSize": {"w":40,"h":40},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"boosttoken.gif":
+{
+	"frame": {"x":199,"y":0,"w":32,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
+	"sourceSize": {"w":32,"h":32},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"bracketlogo.gif":
+{
+	"frame": {"x":0,"y":898,"w":768,"h":1024},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":768,"h":1024},
+	"sourceSize": {"w":768,"h":1024},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"bracketlogo.jpg":
+{
+	"frame": {"x":626,"y":0,"w":77,"h":103},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":77,"h":103},
+	"sourceSize": {"w":77,"h":103},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"bullet.gif":
+{
+	"frame": {"x":11,"y":0,"w":6,"h":6},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":6,"h":6},
+	"sourceSize": {"w":6,"h":6},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"endtoken.gif":
+{
+	"frame": {"x":309,"y":0,"w":42,"h":42},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":42,"h":42},
+	"sourceSize": {"w":42,"h":42},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"largeroid_2.gif":
+{
+	"frame": {"x":231,"y":0,"w":38,"h":38},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":38,"h":38},
+	"sourceSize": {"w":38,"h":38},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"planet.gif":
+{
+	"frame": {"x":546,"y":0,"w":80,"h":80},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":80,"h":80},
+	"sourceSize": {"w":80,"h":80},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"prize.gif":
+{
+	"frame": {"x":395,"y":0,"w":48,"h":48},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":48,"h":48},
+	"sourceSize": {"w":48,"h":48},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"shield.gif":
+{
+	"frame": {"x":494,"y":0,"w":52,"h":52},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":52,"h":52},
+	"sourceSize": {"w":52,"h":52},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"smallroid_2.gif":
+{
+	"frame": {"x":96,"y":0,"w":23,"h":24},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":23,"h":24},
+	"sourceSize": {"w":23,"h":24},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"spacestation.gif":
+{
+	"frame": {"x":833,"y":0,"w":130,"h":130},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
+	"sourceSize": {"w":130,"h":130},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"spacestation_2.gif":
+{
+	"frame": {"x":703,"y":0,"w":130,"h":130},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
+	"sourceSize": {"w":130,"h":130},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"spacestation_3.gif":
+{
+	"frame": {"x":963,"y":0,"w":130,"h":130},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
+	"sourceSize": {"w":130,"h":130},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"SS.gif":
+{
+	"frame": {"x":159,"y":0,"w":40,"h":26},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":40,"h":26},
+	"sourceSize": {"w":40,"h":26},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"SSJ.gif":
+{
+	"frame": {"x":119,"y":0,"w":40,"h":26},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":40,"h":26},
+	"sourceSize": {"w":40,"h":26},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"star.gif":
+{
+	"frame": {"x":443,"y":0,"w":51,"h":50},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":51,"h":50},
+	"sourceSize": {"w":51,"h":50},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"SWS.gif":
+{
+	"frame": {"x":351,"y":0,"w":44,"h":44},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":44,"h":44},
+	"sourceSize": {"w":44,"h":44},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"WM_AIShip_2.png":
+{
+	"frame": {"x":64,"y":0,"w":14,"h":12},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":14,"h":12},
+	"sourceSize": {"w":14,"h":12},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"WM_Blackhole_3.png":
+{
+	"frame": {"x":17,"y":0,"w":7,"h":7},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":7,"h":7},
+	"sourceSize": {"w":7,"h":7},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"WM_Bullet_1.gif":
+{
+	"frame": {"x":0,"y":0,"w":1,"h":1},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":1,"h":1},
+	"sourceSize": {"w":1,"h":1},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"WM_LargeRoid_2.png":
+{
+	"frame": {"x":5,"y":0,"w":6,"h":6},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":6,"h":6},
+	"sourceSize": {"w":6,"h":6},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"WM_Planet_1.gif":
+{
+	"frame": {"x":24,"y":0,"w":8,"h":8},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":8,"h":8},
+	"sourceSize": {"w":8,"h":8},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"WM_PlayerShip_2.png":
+{
+	"frame": {"x":78,"y":0,"w":18,"h":18},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":18,"h":18},
+	"sourceSize": {"w":18,"h":18},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"WM_Prize.gif":
+{
+	"frame": {"x":42,"y":0,"w":10,"h":10},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":10,"h":10},
+	"sourceSize": {"w":10,"h":10},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"WM_SmallRoid_2.png":
+{
+	"frame": {"x":1,"y":0,"w":4,"h":4},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":4,"h":4},
+	"sourceSize": {"w":4,"h":4},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"WM_Spacestation.png":
+{
+	"frame": {"x":52,"y":0,"w":12,"h":12},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":12,"h":12},
+	"sourceSize": {"w":12,"h":12},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"WM_Star_1.gif":
+{
+	"frame": {"x":32,"y":0,"w":10,"h":10},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":10,"h":10},
+	"sourceSize": {"w":10,"h":10},
+	"anchor": {"x":0.5,"y":0.5}
+}},
+"animations": {
+	"spacestation": ["spacestation_2.gif","spacestation_3.gif"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "sheet.png",
+	"format": "RGBA8888",
+	"size": {"w":1366,"h":1922},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:f57bd525430aa7bc48a8d3fc09a4af72:ecfc90de6f64d2cde4845615378d7b38:9c44ecd7e9a522007eaff2949095bc1d$"
+}
+}

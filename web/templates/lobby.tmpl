@@ -1,0 +1,225 @@
+{{define "lobby"}}
+{{template "header"}}
+
+<body>
+
+<!--
+<div class="nk-preloader">
+</div>
+-->
+
+<div class="nk-page-border">
+    <div class="nk-page-border-t"></div>
+    <div class="nk-page-border-r"></div>
+    <div class="nk-page-border-b"></div>
+    <div class="nk-page-border-l"></div>
+</div>
+
+<!--
+<header class="nk-header nk-header-opaque">
+-->
+
+
+
+<!--<nav class="nk-navbar nk-navbar-top nk-navbar-sticky nk-navbar-transparent nk-navbar-autohide"> -->
+<!--<nav class="navbar navbar-inverse navbar-expand-lg navigation-clean"> -->
+
+<div class="nk-contacts-top">
+
+  <div class="container">
+
+      <div class="nk-contacts-left">
+        <div class="nk-navbar">
+
+<!--      <a class="navbar-brand" href="#">SpaceRace</a> -->
+
+
+          <ul class="nk-nav">
+              <li>
+                  <a href="index.html" class="nk-nav-logo">
+                      <img src="/static/img/largeroid_2.gif" alt="" width="30">
+                  </a>
+              </li>
+             <li><a href="#">FAQ</a></li>
+             <li><a href="page-contact.html">Contact</a></li>
+          </ul>
+
+        </div>
+      </div>
+      <div class="nk-contacts-right">
+        <div class="nk-navbar">
+          <ul class="nk-nav">
+            <li>
+               <a href="#" id="user_email">{{.Email}} <img src="{{.Img}}" style="width:30px;height:30px;padding:0;margin-left:5px;"/> </a>
+            </li>
+            <li>
+               <a href="#" onclick="Logout()">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+     </div>
+
+
+ </div>
+
+
+<!--
+<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+<span class="navbar-toggler-icon"></span>
+</button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+
+        <ul class="nav navbar-nav navbar-right mr-auto">
+
+            <li class="nav-item">
+                <a class="nav-link" href="#">FAQ </a>
+            </li>
+        </ul>
+
+        <div class="d-flex justify-content-end">
+            <form class="form-inline my-2 my-lg-0">
+                <a class="mr-sm-4" aria-expanded="true" href="#" id="user_email" >  {{.Email}}  <img src="/resources/img/generic_user.jpg" style="width:30px;height:30px;padding:0;margin-left:5px;" />    </a>
+                <a class="my-4 my-sm-0" aria-expanded="true" href="#" onclick="Logout()">Logout</a>
+            </form>
+        </div>
+
+      </div>
+
+  </div>
+</nav>
+        -->
+
+
+<br/>
+<br/>
+
+<div class="container container-fluid" height="700">
+    <div class="row">
+
+        <div id="raceboard" class="col-md-6 raceboard" style="background: transparent;">
+
+            <div class="panel panel-default" style="background: transparent;">
+
+                <!-- Default panel contents -->
+                <div class="panel-heading" style="font-size:large;text-align: center;">Races</div>
+
+                <table class="table table-bordered table-condensed" id="races_table" style="background: transparent;">
+                    <thead>
+                        <tr>
+                            <td>ID</td>
+                            <td>Name</td>
+                            <td>Start Time</td>
+                            <td>Status</td>
+                            <td>Action</td>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    {{if .Races -}}
+                        {{- range .Races }}
+                        <tr>
+                            <td>{{ .Id -}}</td>
+                            <td>{{ .Name -}}</td>
+                            <td>{{ .StartTime | FormatAsDate -}}</td>
+                            <td>{{ .Status -}}</td>
+                            {{if eq .Status "RaceUnderway"}}
+                                <td> <button class="btn btn-success btn-sm" id="Join_{{.Id}}" onclick="JoinButton(event, {{.Id}})" value="Join">Join</button></td>
+                            {{end}}
+                            {{if eq .Status "RacePending"}}
+                                <td> <button class="btn btn-primary btn-sm" id="Register_{{.Id}}" onclick="RegisterButton(event, {{.Id}})" value="Register">Register</button></td>
+                            {{end}}
+                        </tr>
+                        {{- end}}
+                    {{- end}}
+                    </tbody>
+
+                 </table>
+            </div>
+        </div>
+        <div id="raceboard-controls" class="col-md-2 raceboard">
+             <form class="form-horizontal">
+                 <div class="form-group form-group-sm">
+                     <button id="practise_race" class="btn btn-primary btn-block" type="button" value="Practise Race">Practise Race</button>
+
+             <!--         <input id="practise_race" class="btn btn-warning btn-default" type="button" value="Practise Race">-->
+                  </div>
+             </form>
+        </div>
+     </div>
+
+ </div>
+
+
+ <!-- Signin Form -->
+    <div class="nk-sign-form active">
+        <div class="nk-gap-5"></div>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 offset-lg-4 col-md-6 offset-md-3">
+                    <div class="nk-sign-form-container">
+                        <div class="nk-sign-form-toggle h3">
+                            <a href="#" class="nk-sign-form-login-toggle active">Log In</a>
+                            <a href="#" class="nk-sign-form-register-toggle">Register</a>
+                        </div>
+                        <div class="nk-gap-2"></div>
+
+                        <!-- START: Login Form -->
+                        <form class="nk-sign-form-login active" action="#">
+                            <input class="form-control" type="text" placeholder="Username or Email">
+                            <div class="nk-gap-2"></div>
+
+                            <input class="form-control" type="password" placeholder="Password">
+                            <div class="nk-gap-2"></div>
+
+                            <div class="form-check pull-left">
+                                <label class="form-check-label">
+                                    <input type="checkbox" class="form-check-input"> Remember Me
+                                </label>
+                            </div>
+                            <button class="nk-btn nk-btn-color-white link-effect-4 pull-right">Log In</button>
+
+                            <div class="clearfix"></div>
+                            <div class="nk-gap-1"></div>
+                            <a class="nk-sign-form-lost-toggle pull-right" href="#">Lost Password?</a>
+                        </form>
+                        <!-- END: Login Form -->
+
+                        <!-- START: Lost Password Form -->
+                        <form class="nk-sign-form-lost" action="#">
+                            <input class="form-control" type="text" placeholder="Username or Email">
+                            <div class="nk-gap-2"></div>
+
+                            <button class="nk-btn nk-btn-color-white link-effect-4 pull-right">Get New Password</button>
+                        </form>
+                        <!-- END: Lost Password Form -->
+
+                        <!-- START: Register Form -->
+                        <form class="nk-sign-form-register" action="#">
+                            <input class="form-control" type="text" placeholder="Username">
+                            <div class="nk-gap-2"></div>
+
+                            <input class="form-control" type="email" placeholder="Email">
+                            <div class="nk-gap-2"></div>
+
+                            <div class="pull-left">A password will be emailed to you.</div>
+                            <button class="nk-btn nk-btn-color-white link-effect-4 pull-right">Register</button>
+                        </form>
+                        <!-- END: Register Form -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="nk-gap-5"></div>
+    </div>
+
+
+
+{{template "footer"}}
+   <script src="/static/js/lobby.js" type="text/javascript" charset="utf-8"></script>
+  </body>
+</html>
+
+{{end}}
+

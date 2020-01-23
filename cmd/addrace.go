@@ -57,6 +57,6 @@ func addrace_runit(args []string) {
 
 	_ = core.SetupDB()
 
-	core.AddRace(core.DB, args[0], time.Now(), "")
+	core.AddRace(core.Environment.DB, 0, args[0], time.Now(), "")
 
 }

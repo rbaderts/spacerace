@@ -1,0 +1,8 @@
+namespace messages;
+
+table InitializePlayer {
+    playerId:int;
+    shipId:int;
+}
+
+root_type InitializePlayer;

@@ -3,11 +3,18 @@ package core
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 )
 
 type Lobby struct {
 	Races []Race
 	Email string
+	Img   string
+	Auth0ClientId     string
+	Auth0ClientSecret string
+	Auth0Domain       string
+	Auth0CallbackURL  template.URL
+
 }
 
 func NewLobby() *Lobby {
@@ -18,7 +25,7 @@ func NewLobby() *Lobby {
 }
 
 func (this *Lobby) RefreshRaces() *Lobby {
-	races, err := LoadRaces(DB)
+	races, err := LoadRaces(Environment.DB)
 	if err != nil {
 		fmt.Printf("NewLobby error - %v\n", err)
 	}

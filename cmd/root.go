@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/rbaderts/spacerace/core"
 	"os"
 	"runtime/pprof"
 
@@ -79,6 +80,7 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVar(&CPUProfile, "cpuprofile", "", "write CPU profile to the file")
 	RootCmd.PersistentFlags().StringVar(&MemProfile, "memprofile", "", "write CPU profile to the file")
+	RootCmd.PersistentFlags().BoolVar(&core.SkipLogin, "skiplogin",  false, "SkipLogin")
 
 	//	RootCmd.PersistentFlags().StringVar(&CPUProfile, "cpuprofile", "", "cpuprofile outputfile")
 

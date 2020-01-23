@@ -1,0 +1,133 @@
+namespace messages; 
+
+enum ForceType : byte { NoForceType = 0,
+    ThrustForce, CollisionForce, Gravitation, InitialForce
+}
+
+
+
+
+enum SpriteKind : uint  {
+    NoSpriteType = 0,
+    Ship = 65536,
+    LargeAsteroid = 131072,
+    SmallAsteroid = 196608,
+    Bullet = 262144,
+    Blackhole = 327680,
+    Star = 393216,
+    Prize = 458752,
+    Planet = 524288,
+    SpaceStation = 589824,
+    EndToken = 655360,
+    AiShip   = 720896
+}
+
+enum SoundType : byte {
+
+    NoSoundType = 0,
+    ExplosionSound , BoingSound, BloopSound
+}
+
+enum SpriteStatus : byte {
+    NoSpriteStatus = 0,
+    ShieldActive, JetsOn, PhantomMode 
+}
+
+table SpriteState {
+    id:int;
+    typ:uint;
+    x:double;
+    y:double;
+    vx:double;
+    vy:double;
+    height:int;
+    width:int;
+    rotation:double;
+    mass:double;
+    healthpoints:int;
+    playerId:int;
+    playerName:string;
+}
+
+table SpriteStateUpdate {
+
+    id:int;
+    typ:uint;
+    x:double;
+    y:double;
+    vx:double;
+    vy:double;
+    rotation:double;
+    healthpoints:int;
+    yank:byte;
+}
+
+table PhysicsUpdate {
+    time_nanos:long;
+    frame:int;
+    frameTime:long;
+    actionId:int;
+    sprites:[SpriteState];
+}
+
+
+table InitializePlayer {
+    playerId:int;
+    shipId:int;
+}
+
+
+enum PlayerResourceType : uint {
+
+    NoPlayerResourceType = 0,
+    Life = 256,
+    Shield = 512,
+    Hyperdrive = 768,
+    Booster = 1024,
+    Cloak = 1280,
+    Tractor = 1536,
+    RailGun = 1792
+}
+
+
+table Inventory {
+    resourceType:PlayerResourceType;
+    value:int;
+}
+
+
+table PlayerUpdate {
+    id:int;
+    name:string;
+    shipId:int;
+    inventory:[Inventory];
+}
+
+table PlaySound {
+    soundType:SoundType;
+    volume:double;
+}
+
+table Draw {
+    cmds:[string];
+}
+
+table PlayerDead {
+    playerId:int;
+}
+
+table Shake {
+    spriteId:int;
+    magnitude:int;
+}
+
+
+union UpdateMessage {
+   PlayerUpdate, PhysicsUpdate, InitializePlayer, PlaySound, Draw,
+   Shake, PlayerDead }
+
+table Update {
+    message:UpdateMessage;
+}
+
+root_type Update;

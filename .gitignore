@@ -33,3 +33,4 @@ spacerace.log
 node_modules/**
 perf.log
 resources/js/**
+core/messages/**

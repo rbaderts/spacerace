@@ -9,8 +9,9 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/golang/protobuf/proto"
+	//	flatbuffers "github.com/google/flatbuffers/go"
 	"github.com/gorilla/websocket"
+	"github.com/rbaderts/spacerace/core/messages"
 
 	"math/rand"
 	_ "os"
@@ -30,7 +31,7 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 
 	// Maximum message size allowed from peer.
-	maxMessageSize = 512
+	maxMessageSize = 4096
 )
 
 type HumanPlayer struct {
@@ -39,13 +40,13 @@ type HumanPlayer struct {
 	game        *Game
 	Ship        *Sprite
 	ws          *websocket.Conn
-	SendUpdates chan ServerMessage
+	SendUpdates chan []byte
 	mutex       *sync.Mutex
 
 	// map of item type name to PlayerInventoryRecord
 	Inventory map[PlayerResourceType]*PlayerInventory
 	UserId    int
-	actionId  int
+	ActionId  int
 	Random    *rand.Rand
 }
 
@@ -61,16 +62,16 @@ func NewHumanPlayer(s *Game) Player {
 	p.game = s
 	//	p.ws = con
 	//	p.Send = make(chan ServerMessage, 10)
-	p.SendUpdates = make(chan ServerMessage, 10)
+	p.SendUpdates = make(chan []byte, 10)
 	p.mutex = new(sync.Mutex)
 	p.Inventory = make(map[PlayerResourceType]*PlayerInventory)
-	p.actionId = 0
+	p.ActionId = 0
 
-	p.AddResource(BoosterResource, 2)
-	p.AddResource(ShieldResource, 10)
-	p.AddResource(HyperspaceResource, 2)
-	p.AddResource(LifeEnergyResource, 100)
-	p.AddResource(CloakResource, 5)
+	p.AddResource(messages.PlayerResourceTypeBooster, 2)
+	p.AddResource(messages.PlayerResourceTypeShield, 10)
+	p.AddResource(messages.PlayerResourceTypeHyperdrive, 2)
+	p.AddResource(messages.PlayerResourceTypeLife, 100)
+	p.AddResource(messages.PlayerResourceTypeCloak, 5)
 	p.Random = rand.New(rand.NewSource(time.Now().Unix()))
 	return p
 }
@@ -83,16 +84,27 @@ func (this *HumanPlayer) GetShip() *Sprite {
 	return this.Ship
 }
 
-func (this *HumanPlayer) Update(msg ServerMessage) {
+/*
+func (this *HumanPlayer) Update(message ServerMessage) {
+	out, err := proto.Marshal(&message)
+	if err != nil {
+		return
+	}
+	this.SendUpdates <- out
+}
+ */
+
+func (this *HumanPlayer) UpdateWithBytes(msg []byte) {
+	fmt.Printf("updateWithBytes - size = %d\n", len(msg))
 	this.SendUpdates <- msg
 }
 
 func (this *HumanPlayer) SetActionId(id int) {
-	this.actionId = id
+	this.ActionId = id
 }
 
 func (this *HumanPlayer) GetActionId() int {
-	return this.actionId
+	return this.ActionId
 }
 
 func (this *HumanPlayer) GetPlayerId() int {
@@ -164,12 +176,14 @@ func (this *HumanPlayer) sendRoutine() {
 				this.game.Quit(this)
 			}
 
-			out, err := proto.Marshal(&message)
-			if err != nil {
-				return
-			}
+			/*
+				out, err := proto.Marshal(&message)
+				if err != nil {
+					return
+				}
 
-			err = this.ws.WriteMessage(websocket.BinaryMessage, out)
+			*/
+			err := this.ws.WriteMessage(websocket.BinaryMessage, message)
 			if err != nil {
 				fmt.Printf("ws.WriteMessage error  %v\n", err)
 				return
@@ -211,23 +225,24 @@ func (this *HumanPlayer) ProcessCommands() {
 
 		if mtype == websocket.BinaryMessage {
 
-			msgs := &ClientMessages{}
-			err = proto.Unmarshal(messageBytes, msgs)
+			fmt.Printf("websocket binary:\n")
 
-			if err != nil {
-				fmt.Println("unmarshall error")
-				return
+			fmt.Printf("%x\n", messageBytes)
+			clientMsgs := messages.GetRootAsClientMessage(messageBytes, 0);
+
+			var len int;
+			if (clientMsgs != nil) {
+				len = clientMsgs.MessagesLength()
 			}
 
-			for _, msg := range msgs.Messages {
+			fmt.Printf("clientMessages len = %d\n", len)
+			for i := 0; i < len; i++ {
+				cmd := new(messages.PlayerCommandMessage)
+				result := clientMsgs.Messages(cmd, i)
 
-				switch msg.Typ {
-				case PlayerCommand:
-
-					this.game.PlayerCommands <- PlayerCommandHolder{msg.Cmd, this}
-					//this.game.HandlePlayerCommand(this, msg.Cmd)
-					break
-				default:
+				if (result) {
+					fmt.Printf("Received Player Command: %v\n, for player; %d", cmd, this.PlayerId)
+					this.game.PlayerCommands <- PlayerCommandHolder{cmd, this}
 				}
 
 			}
@@ -238,6 +253,7 @@ func (this *HumanPlayer) ProcessCommands() {
 		}
 
 	}
+	fmt.Printf("ProcessCommands exiting\n")
 
 }
 
