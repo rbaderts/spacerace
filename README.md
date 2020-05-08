@@ -1,6 +1,16 @@
 Build & Run 
 -----------
 
+A multi-user asteroids clone.
+
+      * golang backend
+      * PIXI frontend
+      * homegrown serverside physics implementation
+      * network physics snapshot interpolation
+      * Flatbuffers serialization
+      * postgres
+      
+                    
 * Install and setup latest golang 
 
 
